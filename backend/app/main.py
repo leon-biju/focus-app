@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import auth, tasks, time_blocks, focus_sessions, daily_logs, user_settings
+from app.routers import auth, tasks, time_blocks, focus_sessions, daily_logs, user_settings
 
 app = FastAPI(title="Focus API")
 
