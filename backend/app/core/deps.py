@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import jwt
 import uuid
 
-from app.core.db import get_db
-from app.core.config import settings
+from backend.app.db import get_db
+from backend.app.config import settings
 from app.models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")

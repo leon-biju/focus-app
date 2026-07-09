@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 import jwt
 
-from app.core.config import settings
+from backend.app.config import settings
 
 pwd = PasswordHash.recommended()
 

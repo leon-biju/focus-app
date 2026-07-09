@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, func, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.db import Base
+from backend.app.db import Base
 
 
 class Task(Base):

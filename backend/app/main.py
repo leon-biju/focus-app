@@ -12,8 +12,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# for r in (auth, tasks, time_blocks, focus_sessions, daily_logs, settings_routes):
-#     app.include_router(r.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
 
 @app.get("/api/health")
 def health():
