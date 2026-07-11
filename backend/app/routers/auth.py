@@ -1,14 +1,43 @@
-from fastapi import APIRouter
-from app.models import User
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db import get_db
+from app.schemas.user import UserCreate, UserRead
+from app.schemas.auth import LoginRequest, Token
+from app.services.auth import register_user, UserAlreadyExistsError, authenticate_user
+from app.core.security import create_access_token
+from app.core.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register")
-def register():
-    return
+async def register(payload: UserCreate, session: AsyncSession = Depends(get_db)) -> UserRead:
+    try:
+        user = await register_user(session, payload.email, payload.password)
+    except UserAlreadyExistsError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with this email already exists."
+        )
+    
+    return user
 
 
 @router.post("/login")
-def login():
-    return
+async def login(payload: LoginRequest, session: AsyncSession = Depends(get_db)) -> Token:
+    user = await authenticate_user(session, payload.email, payload.password)
+    if user is None: 
+        print("hi2")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Invalid credentials."
+        )
+    token = create_access_token(user.id)
+    return Token(access_token=token)
+
+
+@router.get("/me")
+async def me(user = Depends(get_current_user)) -> UserRead:
+    return user
