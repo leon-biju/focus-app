@@ -29,7 +29,6 @@ async def register(payload: UserCreate, session: AsyncSession = Depends(get_db))
 async def login(payload: LoginRequest, session: AsyncSession = Depends(get_db)) -> Token:
     user = await authenticate_user(session, payload.email, payload.password)
     if user is None: 
-        print("hi2")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Invalid credentials."
