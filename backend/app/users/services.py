@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
-from app.models import User
+from app.users.models import User
 from app.core.security import hash_password, verify_password, DUMMY_HASH
 
 class UserAlreadyExistsError(Exception):

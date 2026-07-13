@@ -3,9 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
-from app.schemas.user import UserCreate, UserRead
-from app.schemas.auth import LoginRequest, Token
-from app.services.auth import register_user, UserAlreadyExistsError, authenticate_user
+from app.users.schemas import UserCreate, UserRead, LoginRequest, Token
+from app.users.services import register_user, UserAlreadyExistsError, authenticate_user
 from app.core.security import create_access_token
 from app.core.deps import get_current_user
 
