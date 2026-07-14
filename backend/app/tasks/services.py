@@ -53,7 +53,7 @@ async def update(
     user_id: uuid.UUID,
 ) -> Task:
     
-    task = get(session, task_id, user_id)
+    task = await get(session, task_id, user_id)
 
     task_updates = payload.model_dump(exclude_unset=True)
     for key, val in task_updates.items():

@@ -3,21 +3,21 @@ from enum import StrEnum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, func, Text, JSON
+from sqlalchemy import ForeignKey, func, Text, JSON, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.ext.mutable import MutableList
 
 from app.db import Base
 
 class TaskStatus(StrEnum):
-    NOT_STARTED = "not started"
-    IN_PROGRESS = "in progress"
-    DONE = "done"
+    not_started = "not_started"
+    in_progress = "in_progress"
+    done = "done"
 
 class EnergyTag(StrEnum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
+    low = "low"
+    medium = "medium"
+    high = "high"
 
 
 class Task(Base):
@@ -27,10 +27,18 @@ class Task(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
-    energy_tag: Mapped[EnergyTag | None]
+    
     estimate_minutes: Mapped[int]
     actual_minutes: Mapped[int | None]
-    status: Mapped[TaskStatus] = mapped_column(default=TaskStatus.NOT_STARTED)
+
+    energy_tag: Mapped[EnergyTag | None] = mapped_column(
+        Enum(EnergyTag, name="energy_tag"),
+    )
+    status: Mapped[TaskStatus] = mapped_column(
+        Enum(TaskStatus, name="task_status"),
+        default=TaskStatus.not_started
+    )
+
     micro_steps: Mapped[List[Dict[str, Any]]] = mapped_column(
         MutableList.as_mutable(JSON),
         default=list
