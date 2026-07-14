@@ -1,4 +1,5 @@
 from typing import Dict, List, Any
+from enum import StrEnum
 import uuid
 from datetime import datetime
 
@@ -8,6 +9,16 @@ from sqlalchemy.ext.mutable import MutableList
 
 from app.db import Base
 
+class TaskStatus(StrEnum):
+    NOT_STARTED = "not started"
+    IN_PROGRESS = "in progress"
+    DONE = "done"
+
+class EnergyTag(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -16,10 +27,10 @@ class Task(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
-    energy_tag: Mapped[str | None]
+    energy_tag: Mapped[EnergyTag | None]
     estimate_minutes: Mapped[int]
     actual_minutes: Mapped[int | None]
-    status: Mapped[str] = mapped_column(default="not started")
+    status: Mapped[TaskStatus] = mapped_column(default=TaskStatus.NOT_STARTED)
     micro_steps: Mapped[List[Dict[str, Any]]] = mapped_column(
         MutableList.as_mutable(JSON),
         default=list
