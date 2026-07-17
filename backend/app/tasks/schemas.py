@@ -37,3 +37,10 @@ class TaskRead(BaseModel):
     micro_steps: list[MicroStep]
     created_at: datetime
     completed_at: datetime | None
+
+class TaskFilters(BaseModel):
+    status: Annotated[list[TaskStatus] | None, Query()] = None
+    
+    completed_after: datetime | None = None
+    created_after: datetime | None = None
+    created_before: datetime | None = None

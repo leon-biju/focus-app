@@ -94,3 +94,27 @@ async def get_user_tasks(
     )
 
     return list(result.scalars().all())
+
+
+
+
+# Used by the dashboard etc. just all incomplete tasks and tasks that have been completed today
+async def get_today_tasks(
+    session: AsyncSession,
+    user_id: uuid.UUID
+) -> List[Task]:
+    #TODO: Remember to update with user's preferred day cuttoff time! once that is done    
+    today = date.today()
+
+    result = await session.execute(
+        select(Task)
+        .where(
+            Task.user_id == user_id
+            , or_(
+                Task.status == TaskStatus.done,
+                func.date(Task.completed_at) == today
+            )
+        )
+    )
+
+    return list(result.scalars())
