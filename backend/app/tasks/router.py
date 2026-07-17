@@ -1,6 +1,6 @@
 from typing import List
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,9 +26,16 @@ async def create_task(
 
 @router.get("/")
 async def list_tasks(
-    
+    session: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+
 ) -> List[TaskRead]:
-    pass
+    
+    # temporary function just to get all tasks 
+    # In future get query paramters in here as well!
+    tasks = await task_services.get_user_tasks(session, user.id)
+    
+    return tasks
 
 
 @router.get("/{task_id}")
@@ -37,9 +44,12 @@ async def get_task(
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ) -> TaskRead:
-    tasks = await task_services.get(session, task_id, user.id)
-
-    return tasks
+    try:
+        task = await task_services.get(session, task_id, user.id)
+    except TaskNotFoundException:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Task not found.")
+    
+    return task
 
 
 @router.patch("/{task_id}")
@@ -50,7 +60,7 @@ async def update_task(
     user: User = Depends(get_current_user)
 ) -> TaskRead:
     try:
-        task = await task_services.update_task(session, payload, task_id, user.id)
+        task = await task_services.update(session, payload, task_id, user.id)
     except TaskNotFoundException:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Task not found.")
     
@@ -58,7 +68,24 @@ async def update_task(
 
 
 @router.delete("/{task_id}")
-async def delete_task():
+async def delete_task(
+    task_id: uuid.UUID,
+    session: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    try:
+        await task_services.delete(session, task_id, user.id)
+    except TaskNotFoundException:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Task not found.")
+
+    return Response(status_code = status.HTTP_204_NO_CONTENT)
+
+@router.get("/today")
+async def todays_tasks(
+    session: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+) -> List[TaskRead]:
+    
+
+
     pass
-
-

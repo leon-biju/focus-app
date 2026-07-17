@@ -1,10 +1,11 @@
 from typing import List
 import uuid
+from datetime import date, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, and_, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tasks.schemas import TaskCreate, TaskUpdate
+from app.tasks.schemas import TaskCreate, TaskUpdate, TaskStatus
 from app.tasks.models import Task
 from app.tasks.exceptions import TaskNotFoundException
 
@@ -32,7 +33,10 @@ async def get(
 ) -> Task:
     result = await session.execute(
         select(Task)
-        .where(Task.id == task_id and Task.user_id == user_id)
+        .where(
+            Task.id == task_id
+            , Task.user_id == user_id
+        )
     )
 
     task = result.scalar_one_or_none()
@@ -65,8 +69,17 @@ async def update(
     return task
 
 
-async def delete() -> Task:
-    pass
+async def delete(
+    session: AsyncSession,
+    task_id: uuid.UUID,
+    user_id: uuid.UUID,
+):
+    task = await get(session, task_id, user_id)
+
+    await session.delete(task)
+    await session.commit()
+    
+
 
 
 #lol get rid of this replace with filter_by
