@@ -1,0 +1,146 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-sans: 'Instrument Sans', sans-serif;
+    --font-heading: 'Bricolage Grotesque', sans-serif;
+    --font-mono: 'Spline Sans Mono', monospace;
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* Palette straight from the Focus design artifact */
+    --color-ink: var(--ink);
+    --color-ink-2: var(--ink-2);
+    --color-ink-3: var(--ink-3);
+    --color-line: var(--line);
+    --color-linesoft: var(--linesoft);
+    --color-panel: var(--panel);
+    --color-accent-soft: var(--accent-soft);
+    --color-green: var(--green);
+    --color-green-soft: var(--green-soft);
+    --color-amber: var(--amber);
+    --color-amber-soft: var(--amber-soft);
+    --color-blue: var(--blue);
+    --color-blue-soft: var(--blue-soft);
+    --color-violet: var(--violet);
+    --color-violet-soft: var(--violet-soft);
+
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+    --background: #F6F4EE;
+    --foreground: #221E17;
+    --card: #FFFFFF;
+    --card-foreground: #221E17;
+    --popover: #FFFFFF;
+    --popover-foreground: #221E17;
+    --primary: #D9541E;
+    --primary-foreground: #FFFFFF;
+    --secondary: #EFEBE0;
+    --secondary-foreground: #221E17;
+    --muted: #EFEBE0;
+    --muted-foreground: #6E675A;
+    --accent: #FAE8DE;
+    --accent-foreground: #D9541E;
+    --destructive: #B23B2E;
+    --destructive-foreground: #FFFFFF;
+    --border: #E7E2D5;
+    --input: #E7E2D5;
+    --ring: #D9541E;
+    --radius: 0.75rem;
+
+    /* Focus palette */
+    --ink: #221E17;
+    --ink-2: #6E675A;
+    --ink-3: #A39A88;
+    --line: #E7E2D5;
+    --linesoft: #EFEBE0;
+    --panel: #FFFFFF;
+    --accent-soft: #FAE8DE;
+    --green: #4E7A4E;
+    --green-soft: #E5EEE2;
+    --amber: #B0821A;
+    --amber-soft: #F6EDD6;
+    --blue: #3D6BA6;
+    --blue-soft: #E3EBF5;
+    --violet: #7A5AB8;
+    --violet-soft: #ECE6F7;
+    --shadow: 0 1px 2px rgba(40, 30, 10, .05), 0 4px 14px rgba(40, 30, 10, .05);
+}
+
+.dark {
+    --background: #161410;
+    --foreground: #F0EBDF;
+    --card: #201D16;
+    --card-foreground: #F0EBDF;
+    --popover: #201D16;
+    --popover-foreground: #F0EBDF;
+    --primary: #F0703C;
+    --primary-foreground: #1D120A;
+    --secondary: #2A271E;
+    --secondary-foreground: #F0EBDF;
+    --muted: #2A271E;
+    --muted-foreground: #A69C89;
+    --accent: #3B2417;
+    --accent-foreground: #F0703C;
+    --destructive: #E5786A;
+    --destructive-foreground: #1D120A;
+    --border: #332F25;
+    --input: #332F25;
+    --ring: #F0703C;
+
+    /* Focus palette */
+    --ink: #F0EBDF;
+    --ink-2: #A69C89;
+    --ink-3: #6E6553;
+    --line: #332F25;
+    --linesoft: #2A271E;
+    --panel: #201D16;
+    --accent-soft: #3B2417;
+    --green: #93C08D;
+    --green-soft: #22301F;
+    --amber: #DFB459;
+    --amber-soft: #362D16;
+    --blue: #82ABDB;
+    --blue-soft: #1D2938;
+    --violet: #B39BE8;
+    --violet-soft: #292036;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground font-sans;
+    }
+  ::placeholder {
+    color: var(--ink-3);
+    }
+}
