@@ -23,14 +23,14 @@ class RefreshToken(Base):
       ForeignKey("users.id", ondelete="CASCADE"), index=True
    )
    # All tokens in one rotation chain (so per user device/browser session) share a family_id
-   # Any reuse of a revoked refresh token will revoke the whole family.
+   # Any reuse of a revoked refresh token will revoke whole family.
    family_id: Mapped[uuid.UUID] = mapped_column(index=True)
    token_hash: Mapped[str] = mapped_column(unique=True, index=True)  # sha256 hex
    created_at: Mapped[datetime] = mapped_column(
       DateTime(timezone=True), server_default=func.now()
    )
    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-   # Set when superseded by rotation, revoked by logout, or family-revoked.
+   # Set when rotated, revoked by logout, or family-revoked.
    revoked_at: Mapped[datetime | None] = mapped_column(
       DateTime(timezone=True), default=None
    )

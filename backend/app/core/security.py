@@ -1,4 +1,6 @@
 from pwdlib import PasswordHash
+import hashlib
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 import jwt
@@ -24,21 +26,8 @@ def create_access_token(user_id: uuid.UUID)-> str:
         algorithm=settings.jwt_algorithm
     )
 
-def decode_token(token: str) -> uuid.UUID:
-    try:
-        payload = jwt.decode(
-            jwt=token,
-            key=settings.jwt_secret,
-            algorithms=[settings.jwt_algorithm]
-        )
+def generate_refresh_token() -> str:
+    return secrets.token_urlsafe(32) # 256 bits
 
-        user_id = payload.get("sub")
-        
-        if user_id is None:
-            raise ValueError("sub is missing")
-        
-    except jwt.ExpiredSignatureError:
-        raise ValueError("Token has expired")
-    except jwt.JWTError:
-        raise ValueError("Invalid token")
-    return
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
