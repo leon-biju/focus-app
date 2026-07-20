@@ -1,4 +1,4 @@
-import { get, post } from "@/lib/api"
+import { get, post, getAccessToken, setAccessToken, refreshAccessToken } from "@/lib/api"
 
 export interface Credentials {
   email: string
@@ -12,8 +12,9 @@ export interface AuthUser {
 }
 
 export async function login(creds: Credentials): Promise<void> {
+  // The backend will also automatically set the refresh cookie for us
   const { access_token } = await post<{ access_token: string }>("/auth/login", creds)
-  localStorage.setItem('access_token', access_token)
+  setAccessToken(access_token)
 }
 
 export async function register(creds: Credentials): Promise<AuthUser> {
@@ -23,17 +24,25 @@ export async function register(creds: Credentials): Promise<AuthUser> {
 }
 
 export async function fetchCurrentUser(): Promise<AuthUser | null> {
-  if (!localStorage.getItem("access_token")) return null
+
+  if (!getAccessToken() && !(await refreshAccessToken())) {
+    // no access nor refresh cookie yeah we're logged out alright
+    return null
+  }
   try {
-    const user = await get<AuthUser>("/auth/me");
-    return user;
+    // we have an access token if /auth/me responds
+    return await get<AuthUser>("/auth/me")
   } catch {
-    // Token is stale or invalid so drop it
-    localStorage.removeItem("access_token");
-    return null;
+    setAccessToken(null)
+    return null
   }
 }
 
-export function logout() {
-  localStorage.removeItem("access_token")
+export async function logout(): Promise<void> {
+  try {
+    // Revokes the refresh token server-side and clears the cookie
+    await post("/auth/logout")
+  } finally {
+    setAccessToken(null)
+  }
 }
