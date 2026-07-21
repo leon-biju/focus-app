@@ -1,21 +1,14 @@
-import { useEffect, useState } from "react"
 import { Navigate, Outlet } from "react-router-dom"
-import { fetchCurrentUser } from "@/lib/auth"
-
-type AuthStatus = "checking" | "authed" | "anon"
+import { useCurrentUser } from "@/hooks/use-auth"
 
 export function RequireAuth() {
-  const [status, setStatus] = useState<AuthStatus>("checking")
+  const { data: user, isPending } = useCurrentUser()
 
-  useEffect(() => {
-    fetchCurrentUser().then((user) => setStatus(user ? "authed" : "anon"))
-  }, [])
-
-  if (status === "checking") {
+  if (isPending) {
     return null
   }
-  
-  if (status === "anon") {
+
+  if (!user) {
     return <Navigate to="/login" replace />
   }
   return <Outlet />

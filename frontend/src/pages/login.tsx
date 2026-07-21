@@ -1,39 +1,36 @@
-import { useState } from "react"
 import type { SubmitEvent } from "react"
+import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { AuthShell } from "@/components/auth-shell"
-import { login } from "@/lib/auth"
+import { ApiError } from "@/lib/api"
+import { useLogin } from "@/hooks/use-auth"
 
 export function LoginPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const loginMutation = useLogin()
 
-  async function handleSubmit(e: SubmitEvent) {
+  function handleSubmit(e: SubmitEvent) {
     e.preventDefault()
-    setError(null)
-    setSubmitting(true)
-    try {
-      await login({ email, password })
-      navigate("/dashboard")
-    } catch {
-      // TODO: map backend errors (401 invalid credentials) to friendlier copy
-      setError("Invalid email or password.")
-    } finally {
-      setSubmitting(false)
-    }
+    loginMutation.mutate(
+      { email, password },
+      { onSuccess: () => navigate("/dashboard") }
+    )
   }
+
+  const error = loginMutation.error
+    ? loginMutation.error instanceof ApiError && loginMutation.error.status === 401
+      ? "Invalid email or password."
+      : "Something went wrong. Please try again."
+    : null
+  const submitting = loginMutation.isPending
 
   return (
     <AuthShell>
       <h1 className="font-heading text-[22px] font-semibold tracking-tight">Welcome back</h1>
-      <p className="mt-1 text-[13px] text-muted-foreground">
-        Pick up where you left off — no pressure.
-      </p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <div>
@@ -45,7 +42,6 @@ export function LoginPage() {
             type="email"
             required
             autoComplete="email"
-            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -58,7 +54,7 @@ export function LoginPage() {
             </label>
             {/* TODO: forgot-password flow (no backend endpoint yet) */}
             <a href="#" className="text-xs text-primary hover:underline">
-              Forgot password?
+              Forgotten your password?
             </a>
           </div>
           <Input
@@ -66,7 +62,6 @@ export function LoginPage() {
             type="password"
             required
             autoComplete="current-password"
-            placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -84,7 +79,6 @@ export function LoginPage() {
       </form>
 
       <div className="mt-5 border-t border-linesoft pt-4 text-center text-[12.5px] text-muted-foreground">
-        New here?{" "}
         <Link to="/register" className="font-medium text-primary hover:underline">
           Create an account
         </Link>

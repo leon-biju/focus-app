@@ -1,53 +1,51 @@
-import { useState } from "react"
 import type { SubmitEvent } from "react"
+import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { AuthShell } from "@/components/auth-shell"
-import { register } from "@/lib/auth"
+import { ApiError } from "@/lib/api"
+import { useRegister } from "@/hooks/use-auth"
 
 export function RegisterPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const registerMutation = useRegister()
 
-  async function handleSubmit(e: SubmitEvent) {
+  function handleSubmit(e: SubmitEvent) {
     e.preventDefault()
-    setError(null)
 
     if (password !== confirm) {
-      setError("Passwords don't match.")
+      setValidationError("Passwords don't match.")
       return
     }
     // TODO: match backend password validation rules (see UserCreate schema)
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.")
+      setValidationError("Password must be at least 8 characters.")
       return
     }
+    setValidationError(null)
 
-    setSubmitting(true)
-    try {
-      await register({ email, password })
-      // TODO: decide post-register flow — auto-login vs. redirect to /login
-      navigate("/dashboard")
-    } catch {
-      // TODO: map 409 from POST /auth/register to "email already in use"
-      setError("Something went wrong. Please try again.")
-    } finally {
-      setSubmitting(false)
-    }
+    registerMutation.mutate(
+      { email, password },
+      { onSuccess: () => navigate("/dashboard") }
+    )
   }
+
+  const mutationError = registerMutation.error
+    ? registerMutation.error instanceof ApiError && registerMutation.error.status === 409
+      ? "That email is already in use."
+      : "Something went wrong. Please try again."
+    : null
+  const error = validationError ?? mutationError
+  const submitting = registerMutation.isPending
 
   return (
     <AuthShell>
       <h1 className="font-heading text-[22px] font-semibold tracking-tight">Create your account</h1>
-      <p className="mt-1 text-[13px] text-muted-foreground">
-        A calmer way to plan your day starts here.
-      </p>
-
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <div>
           <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-muted-foreground">
@@ -58,7 +56,6 @@ export function RegisterPage() {
             type="email"
             required
             autoComplete="email"
-            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -76,7 +73,6 @@ export function RegisterPage() {
             type="password"
             required
             autoComplete="new-password"
-            placeholder="At least 8 characters"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -94,7 +90,6 @@ export function RegisterPage() {
             type="password"
             required
             autoComplete="new-password"
-            placeholder="One more time"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
           />
@@ -107,7 +102,7 @@ export function RegisterPage() {
         )}
 
         <Button type="submit" disabled={submitting} className="mt-1 w-full">
-          {submitting ? "Creating account…" : "Create account"}
+          {submitting ? "Creating account..." : "Create account"}
         </Button>
       </form>
 
