@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom"
 import {
   LayoutGrid,
   Rows3,
-  NotebookText,
+  ListCheck,
   Target,
   Moon,
   BarChart3,
@@ -15,7 +15,7 @@ import { useTheme } from "@/components/theme-provider"
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutGrid },
   { to: "/time-blocker", label: "Time Blocker", icon: Rows3 },
-  { to: "/notes", label: "Notes", icon: NotebookText },
+  { to: "/tasks", label: "Tasks", icon: ListCheck },
   { to: "/focus", label: "Focus Mode", icon: Target },
   { to: "/daily-log", label: "Daily Log", icon: Moon },
   { to: "/patterns", label: "Patterns", icon: BarChart3 },
