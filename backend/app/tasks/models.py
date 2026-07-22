@@ -46,3 +46,9 @@ class Task(Base):
 
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     completed_at: Mapped[datetime | None]
+
+    # Optimistic locking: every UPDATE/DELETE uses WHERE version_id = value read,
+    # so a concurrent read-modify-write raises StaleDataError instead of going weird
+    version_id: Mapped[int] = mapped_column(server_default="1")
+
+    __mapper_args__ = {"version_id_col": version_id}

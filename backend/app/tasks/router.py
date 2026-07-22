@@ -1,14 +1,13 @@
 from typing import List
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, Response
 
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db
-
 from app.users.models import User
 from app.tasks.schemas import TaskCreate, TaskRead, TaskUpdate
-from app.tasks.exceptions import TaskNotFoundException
+from app.tasks.exceptions import TaskNotFoundException, TaskConflictException
 import app.tasks.services as task_services
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -19,7 +18,6 @@ async def create_task(
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ) -> TaskRead:
-    
     task = await task_services.create(session, payload, user.id)
     
     return task
@@ -44,11 +42,7 @@ async def get_task(
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ) -> TaskRead:
-    try:
-        task = await task_services.get(session, task_id, user.id)
-    except TaskNotFoundException:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Task not found.")
-    
+    task = await task_services.get(session, task_id, user.id)    
     return task
 
 
@@ -59,11 +53,7 @@ async def update_task(
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ) -> TaskRead:
-    try:
-        task = await task_services.update(session, payload, task_id, user.id)
-    except TaskNotFoundException:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Task not found.")
-    
+    task = await task_services.update(session, payload, task_id, user.id)
     return task
 
 
@@ -73,11 +63,7 @@ async def delete_task(
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
-    try:
-        await task_services.delete(session, task_id, user.id)
-    except TaskNotFoundException:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Task not found.")
-
+    await task_services.delete(session, task_id, user.id)
     return Response(status_code = status.HTTP_204_NO_CONTENT)
 
 @router.get("/today")

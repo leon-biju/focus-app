@@ -4,10 +4,11 @@ from datetime import date, timedelta
 
 from sqlalchemy import select, and_, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.tasks.schemas import TaskCreate, TaskUpdate, TaskStatus
 from app.tasks.models import Task
-from app.tasks.exceptions import TaskNotFoundException
+from app.tasks.exceptions import TaskNotFoundException, TaskConflictException
 
 async def create(
     session: AsyncSession,
@@ -34,8 +35,8 @@ async def get(
     result = await session.execute(
         select(Task)
         .where(
-            Task.id == task_id
-            , Task.user_id == user_id
+            Task.id == task_id,
+            Task.user_id == user_id
         )
     )
 
@@ -63,7 +64,14 @@ async def update(
     for key, val in task_updates.items():
         setattr(task, key, val)
 
-    await session.commit()
+    try:
+        await session.commit()
+    except StaleDataError:
+        # Someone else wrote this row between our read and our commit.
+        # Roll back so the session is reusable, then let the router 409.
+        await session.rollback()
+        raise TaskConflictException()
+
     await session.refresh(task)
 
     return task
@@ -77,7 +85,12 @@ async def delete(
     task = await get(session, task_id, user_id)
 
     await session.delete(task)
-    await session.commit()
+
+    try:
+        await session.commit()
+    except StaleDataError:
+        await session.rollback()
+        raise TaskConflictException()
     
 
 
