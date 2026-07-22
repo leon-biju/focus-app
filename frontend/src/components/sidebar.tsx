@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom"
+import { Link, NavLink, useNavigate } from "react-router-dom"
 import {
   LayoutGrid,
   Rows3,
@@ -7,10 +7,18 @@ import {
   Moon,
   BarChart3,
   Settings as SettingsIcon,
-  Sun,
+  LogOut,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useTheme } from "@/components/theme-provider"
+import { useCurrentUser, useLogout } from "@/hooks/use-auth"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutGrid },
@@ -19,11 +27,12 @@ const navItems = [
   { to: "/focus", label: "Focus Mode", icon: Target },
   { to: "/daily-log", label: "Daily Log", icon: Moon },
   { to: "/patterns", label: "Patterns", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
 ]
 
 export function Sidebar() {
-  const { theme, toggleTheme } = useTheme()
+  const { data: user } = useCurrentUser()
+  const logout = useLogout()
+  const navigate = useNavigate()
 
   return (
     <nav className="flex w-56 flex-none flex-col border-r border-border px-3 py-5 box-border">
@@ -54,19 +63,36 @@ export function Sidebar() {
 
       <div className="flex-1" />
 
-      <NavLink
-        to="/focus"
-        className="flex items-center justify-center gap-2 rounded-[9px] bg-primary px-3 py-2.5 text-[13.5px] font-semibold text-primary-foreground shadow-[var(--shadow)] transition-[filter] hover:brightness-[1.06]"
-      >
-        Start focusing
-      </NavLink>
-      <button
-        onClick={toggleTheme}
-        className="mt-2.5 flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] text-muted-foreground transition-colors hover:bg-linesoft"
-      >
-        {theme === "dark" ? <Sun className="size-3.5" strokeWidth={1.8} /> : <Moon className="size-3.5" strokeWidth={1.8} />}
-        {theme === "dark" ? "Switch to light" : "Switch to dark"}
-      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="mt-2.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-muted-foreground transition-colors hover:bg-linesoft data-[state=open]:bg-linesoft">
+          <Avatar size="sm" className="flex-none">
+            <AvatarFallback className="uppercase">{user?.email.charAt(0) ?? "?"}</AvatarFallback>
+          </Avatar>
+          <span className="truncate">{user?.email ?? "Account"}</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="top" align="start" className="w-48">
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link to="/settings">
+              <SettingsIcon strokeWidth={1.8} />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            className="cursor-pointer"
+            disabled={logout.isPending}
+            onSelect={() =>
+              logout.mutate(undefined, {
+                onSettled: () => navigate("/login", { replace: true }),
+              })
+            }
+          >
+            <LogOut strokeWidth={1.8} />
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </nav>
   )
 }

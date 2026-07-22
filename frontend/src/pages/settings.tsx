@@ -118,7 +118,7 @@ export function SettingsPage() {
               <div className="mt-2.5 inline-flex gap-0.5 rounded-[9px] border border-line p-0.75">
                 <button
                   onClick={() => theme === "dark" && toggleTheme()}
-                  className={`rounded-[7px] px-4 py-2 text-[12.5px] font-semibold ${
+                  className={`cursor-pointer rounded-[7px] px-4 py-2 text-[12.5px] font-semibold ${
                     theme === "light" ? "bg-foreground text-background" : "text-muted-foreground"
                   }`}
                 >
@@ -126,7 +126,7 @@ export function SettingsPage() {
                 </button>
                 <button
                   onClick={() => theme === "light" && toggleTheme()}
-                  className={`rounded-[7px] px-4 py-2 text-[12.5px] font-semibold ${
+                  className={`cursor-pointer rounded-[7px] px-4 py-2 text-[12.5px] font-semibold ${
                     theme === "dark" ? "bg-foreground text-background" : "text-muted-foreground"
                   }`}
                 >
