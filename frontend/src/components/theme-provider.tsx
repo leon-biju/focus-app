@@ -9,11 +9,18 @@ type ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined)
 
+// Please keep this in sync with the inline script in index.html, which applies the stored
+// theme before first paint so there's no flash of the wrong one on reload.
+const STORAGE_KEY = "focus-theme"
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light")
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light")
+  )
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark")
+    localStorage.setItem(STORAGE_KEY, theme)
   }, [theme])
 
   const toggleTheme = () => setTheme((t) => (t === "light" ? "dark" : "light"))
