@@ -15,3 +15,9 @@ class Note(Base):
     content: Mapped[str | None] = mapped_column(Text)
 
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    # Optimistic locking. Clients send back the version_id they loaded, so an
+    # edit built on a stale copy is rejected rather than silently overwriting
+    version_id: Mapped[int] = mapped_column(server_default="1")
+
+    __mapper_args__ = {"version_id_col": version_id}
