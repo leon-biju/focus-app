@@ -11,6 +11,7 @@ from app.config import settings
 from app.db import Base
 import app.users.models
 import app.tasks.models
+import app.notes.models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
