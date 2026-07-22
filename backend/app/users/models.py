@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, func
+from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -26,11 +26,7 @@ class RefreshToken(Base):
    # Any reuse of a revoked refresh token will revoke whole family.
    family_id: Mapped[uuid.UUID] = mapped_column(index=True)
    token_hash: Mapped[str] = mapped_column(unique=True, index=True)  # sha256 hex
-   created_at: Mapped[datetime] = mapped_column(
-      DateTime(timezone=True), server_default=func.now()
-   )
-   expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+   created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+   expires_at: Mapped[datetime]
    # Set when rotated, revoked by logout, or family-revoked.
-   revoked_at: Mapped[datetime | None] = mapped_column(
-      DateTime(timezone=True), default=None
-   )
+   revoked_at: Mapped[datetime | None] = mapped_column(default=None)

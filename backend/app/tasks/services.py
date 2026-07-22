@@ -1,6 +1,6 @@
 from typing import List
 import uuid
-from datetime import date, timedelta
+from datetime import datetime, timezone
 
 from sqlalchemy import select, and_, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -116,8 +116,10 @@ async def get_today_tasks(
     session: AsyncSession,
     user_id: uuid.UUID
 ) -> List[Task]:
-    #TODO: Remember to update with user's preferred day cuttoff time! once that is done    
-    today = date.today()
+    #TODO: Remember to update with user's preferred day cuttoff time! once that is done
+    # Until then "today" is the UTC day, matching how func.date() reads the
+    # timestamptz column. date.today() would be the API process's local day.
+    today = datetime.now(timezone.utc).date()
 
     result = await session.execute(
         select(Task)
