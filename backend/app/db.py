@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 
@@ -20,3 +20,9 @@ class Base(DeclarativeBase):
 async def get_db():
     async with SessionLocal() as session:
         yield session
+
+async def ping_db():
+    # Test that the db connection actually works before we attempt to 
+    # serve the api
+    async with engine.connect() as conn:
+        await conn.execute(text("SELECT 1"))
