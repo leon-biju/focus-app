@@ -7,6 +7,7 @@ from sqlalchemy import delete, select, update
 
 from app.config import settings
 from app.users.models import RefreshToken, User
+from app.users.exceptions import UserAlreadyExistsError, InvalidRefreshTokenError
 from app.core.security import (
     DUMMY_HASH,
     generate_refresh_token,
@@ -14,13 +15,6 @@ from app.core.security import (
     hash_refresh_token,
     verify_password,
 )
-
-class UserAlreadyExistsError(Exception):
-    pass
-
-class InvalidRefreshTokenError(Exception):
-    # Vague on purpose
-    pass
  
 async def register_user(session: AsyncSession, email: str, password: str) -> User:
     user = User(

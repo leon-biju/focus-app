@@ -7,14 +7,13 @@ from app.config import settings
 from app.db import get_db
 from app.users.schemas import UserCreate, UserRead, LoginRequest, Token
 from app.users.services import (
-    InvalidRefreshTokenError,
-    UserAlreadyExistsError,
     authenticate_user,
     issue_refresh_token,
     register_user,
     revoke_refresh_token,
     rotate_refresh_token,
 )
+from app.users.exceptions import InvalidRefreshTokenError
 from app.core.security import create_access_token
 from app.core.deps import get_current_user
 
@@ -51,14 +50,8 @@ def clear_refresh_cookie(response: Response):
 
 @router.post("/register")
 async def register(payload: UserCreate, session: AsyncSession = Depends(get_db)) -> UserRead:
-    try:
-        user = await register_user(session, payload.email, payload.password)
-    except UserAlreadyExistsError:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A user with this email already exists."
-        )
-    
+    user = await register_user(session, payload.email, payload.password)
+
     return user
 
 
@@ -93,12 +86,13 @@ async def refresh(
     if refresh_token is not None:
         try:
             user_id, new_refresh_token = await rotate_refresh_token(session, refresh_token)
-        except InvalidRefreshTokenError:
-            pass
-        else:
+            
             # This is a successful refresh and we send back the new access_token
             set_refresh_cookie(response, new_refresh_token)
             return Token(access_token=create_access_token(user_id))
+        except InvalidRefreshTokenError:
+            pass
+        
 
     # HTTPException wouldn't carry cookie mutations made on the injected
     # Response, so build the 401 directly and clear the cookie on it.
