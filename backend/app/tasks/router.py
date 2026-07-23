@@ -12,7 +12,7 @@ import app.tasks.services as task_services
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
-@router.post("/")
+@router.post("")
 async def create_task(
     payload: TaskCreate,
     session: AsyncSession = Depends(get_db),
@@ -22,7 +22,7 @@ async def create_task(
     
     return task
 
-@router.get("/")
+@router.get("")
 async def list_tasks(
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)

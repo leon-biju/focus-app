@@ -11,7 +11,7 @@ import app.notes.services as notes_services
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
-@router.post("/")
+@router.post("")
 async def create_note(
     payload: NoteCreate,
     session: AsyncSession = Depends(get_db),
@@ -20,7 +20,7 @@ async def create_note(
     note = await notes_services.create(session, payload.content, user.id)
     return note
 
-@router.get("/")
+@router.get("")
 async def list_notes(
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
