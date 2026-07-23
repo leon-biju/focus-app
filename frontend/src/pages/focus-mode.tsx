@@ -1,13 +1,16 @@
+import { useState } from "react"
 import { ProgressRing } from "@/components/progress-ring"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-
-const parked = [
-  "Buy a birthday card for Mum",
-  "Idea: color-code blocks by energy",
-]
+import { useNoteComposer } from "@/hooks/use-notes"
+import type { Note } from "@/lib/notes"
 
 export function FocusModePage() {
+  // "This session" is scoped to this visit: only what got parked since the page
+  // mounted, newest first. Everything parked lands in the full list on /tasks.
+  const [parked, setParked] = useState<Note[]>([])
+  const composer = useNoteComposer((note) => setParked((prev) => [note, ...prev]))
+
   return (
     <div className="flex min-h-full box-border">
       <div className="flex flex-1 flex-col items-center justify-center px-10 py-15 text-center">
@@ -57,23 +60,34 @@ export function FocusModePage() {
         </div>
         <Textarea
           rows={3}
+          value={composer.draft}
+          onChange={(e) => composer.setDraft(e.target.value)}
+          onKeyDown={composer.onKeyDown}
           placeholder="e.g. reply to Sam about the offsite…"
           className="mt-3.5 resize-none text-[13px]"
         />
-        <button className="mt-2.5 rounded-lg bg-linesoft px-2.5 py-2.5 text-[12.5px] font-semibold text-muted-foreground hover:bg-accent-soft hover:text-primary">
-          Park it → inbox
+        <button
+          disabled={!composer.canSubmit}
+          onClick={composer.submit}
+          className="mt-2.5 cursor-pointer rounded-lg bg-linesoft px-2.5 py-2.5 text-[12.5px] font-semibold text-muted-foreground hover:bg-accent-soft hover:text-primary disabled:cursor-default disabled:opacity-50 disabled:hover:bg-linesoft disabled:hover:text-muted-foreground"
+        >
+          {composer.isPending ? "Parking…" : "Park it → inbox"}
         </button>
 
-        <div className="mt-6.5 text-[11px] font-semibold tracking-[.06em] text-ink-3 uppercase">
-          Parked this session
-        </div>
-        <div className="mt-2.5 flex flex-col gap-2">
-          {parked.map((p) => (
-            <div key={p} className="rounded-lg bg-linesoft px-3 py-2.5 text-[12.5px] text-muted-foreground">
-              {p}
+        {parked.length > 0 && (
+          <>
+            <div className="mt-6.5 text-[11px] font-semibold tracking-[.06em] text-ink-3 uppercase">
+              Parked this session
             </div>
-          ))}
-        </div>
+            <div className="mt-2.5 flex flex-col gap-2">
+              {parked.map((p) => (
+                <div key={p.id} className="rounded-lg bg-linesoft px-3 py-2.5 text-[12.5px] text-muted-foreground">
+                  {p.content}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </aside>
     </div>
   )

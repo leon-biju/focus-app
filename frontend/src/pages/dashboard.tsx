@@ -1,7 +1,9 @@
 import { Plus } from "lucide-react"
+import { toast } from "sonner"
 import { EnergyBadge } from "@/components/energy-badge"
 import { ProgressRing } from "@/components/progress-ring"
 import { Button } from "@/components/ui/button"
+import { useNoteComposer } from "@/hooks/use-notes"
 
 const todaysThree = [
   { name: "Send the invoice to Meridian", done: true, energy: "low" as const, est: "~10m" },
@@ -15,6 +17,9 @@ const upNext = [
 ]
 
 export function DashboardPage() {
+  // Nothing on this page lists notes, so confirm the capture landed somewhere
+  const composer = useNoteComposer(() => toast.success("Saved to your notes"))
+
   return (
     <div className="mx-auto max-w-[960px] px-11 pt-10 pb-16">
       <div className="flex items-end justify-between gap-5">
@@ -37,11 +42,20 @@ export function DashboardPage() {
       <div className="mt-6.5 flex items-center gap-2.5 rounded-xl border border-border bg-card py-1.5 pr-1.5 pl-4.5 shadow-[var(--shadow)]">
         <Plus className="size-4 flex-none text-ink-3" strokeWidth={1.8} />
         <input
+          value={composer.draft}
+          onChange={(e) => composer.setDraft(e.target.value)}
+          onKeyDown={composer.onKeyDown}
           className="flex-1 border-none bg-transparent py-2.5 text-sm outline-none"
           placeholder="Add anything…"
         />
-        <Button variant="secondary" size="sm" className="hover:bg-accent-soft hover:text-primary">
-          Capture ⏎
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!composer.canSubmit}
+          onClick={composer.submit}
+          className="hover:bg-accent-soft hover:text-primary"
+        >
+          {composer.isPending ? "Capturing…" : "Capture ⏎"}
         </Button>
       </div>
 
