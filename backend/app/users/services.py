@@ -31,12 +31,10 @@ async def register_user(session: AsyncSession, email: str, password: str) -> Use
     session.add(user)
 
     try:
-        await session.commit()
+        await session.flush()
     except IntegrityError as e:
-        await session.rollback()
+        # get_db rolls back once this propagates out of the handler.
         raise UserAlreadyExistsError(email) from e
-        
-    await session.refresh(user)
 
     return user
 
@@ -84,7 +82,6 @@ async def issue_refresh_token(
             expires_at=now + timedelta(days=settings.refresh_token_expire_days),
         )
     )
-    await session.commit()
 
     return raw_token
 
@@ -107,7 +104,7 @@ async def rotate_refresh_token(session: AsyncSession, raw_token: str) -> tuple[u
 
     if token.revoked_at is not None:
         # Token has been revoked already so we revoke all of this family's token for
-        # security reasons 
+        # security reasons
         await session.execute(
             update(RefreshToken)
             .where(
@@ -116,11 +113,15 @@ async def rotate_refresh_token(session: AsyncSession, raw_token: str) -> tuple[u
             )
             .values(revoked_at=now)
         )
+
+        # Commit explicitly here since the write MUST happen.
+        # The raise will cause a rollback on the transaction
         await session.commit()
         raise InvalidRefreshTokenError()
 
     if token.expires_at < now:
         token.revoked_at = now
+        # Same as above, the revocation must outlive the failing request.
         await session.commit()
         raise InvalidRefreshTokenError()
 
@@ -141,4 +142,3 @@ async def revoke_refresh_token(session: AsyncSession, raw_token: str):
 
     if token is not None and token.revoked_at is None:
         token.revoked_at = datetime.now(timezone.utc)
-        await session.commit()

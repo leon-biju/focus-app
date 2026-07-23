@@ -18,8 +18,12 @@ class Base(DeclarativeBase):
     type_annotation_map = {datetime: DateTime(timezone=True)}
 
 async def get_db():
+    # Every time this dependency is injected it counts as 1 transaction
+    # Therefore multiple service calls using the same session will be commited at once
+    # Easy to rollback etc.
     async with SessionLocal() as session:
         yield session
+        await session.commit()
 
 async def ping_db():
     # Test that the db connection actually works before we attempt to 

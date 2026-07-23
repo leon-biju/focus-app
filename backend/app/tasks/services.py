@@ -21,8 +21,7 @@ async def create(
         **task_create.model_dump(),
     )
     session.add(task)
-    await session.commit()
-    await session.refresh(task)
+    await session.flush()
 
     return task
 
@@ -65,14 +64,11 @@ async def update(
         setattr(task, key, val)
 
     try:
-        await session.commit()
-    except StaleDataError:
-        # Someone else wrote this row between our read and our commit.
-        # Roll back so the session is reusable, then let the router 409.
-        await session.rollback()
-        raise TaskConflictException()
-
-    await session.refresh(task)
+        await session.flush()
+    except StaleDataError as e:
+        # Someone else wrote this row between our read and our flush.
+        # get_db rolls this back automatically.
+        raise TaskConflictException() from e
 
     return task
 
@@ -87,10 +83,9 @@ async def delete(
     await session.delete(task)
 
     try:
-        await session.commit()
-    except StaleDataError:
-        await session.rollback()
-        raise TaskConflictException()
+        await session.flush()
+    except StaleDataError as e:
+        raise TaskConflictException() from e
     
 
 

@@ -20,8 +20,7 @@ async def create(
         content = note_text
     )
     session.add(note)
-    await session.commit()
-    await session.refresh(note)
+    await session.flush()
 
     return note
 
@@ -74,13 +73,10 @@ async def update(
     note.content = payload.content
 
     try:
-        await session.commit()
-    except StaleDataError:
+        await session.flush()
+    except StaleDataError as e:
         # Same issue as above but the other write landed after our check above.
-        await session.rollback()
-        raise NoteConflictException()
-
-    await session.refresh(note)
+        raise NoteConflictException() from e
 
     return note
 
@@ -95,7 +91,6 @@ async def delete(
     await session.delete(note)
 
     try:
-        await session.commit()
-    except StaleDataError:
-        await session.rollback()
-        raise NoteConflictException()
+        await session.flush()
+    except StaleDataError as e:
+        raise NoteConflictException() from e
