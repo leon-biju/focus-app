@@ -9,7 +9,7 @@ from alembic import context
 
 from app.config import settings
 from app.db import Base
-import app.users.models
+import app.auth.models
 import app.tasks.models
 import app.notes.models
 

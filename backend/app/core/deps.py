@@ -6,7 +6,7 @@ import uuid
 
 from app.db import get_db
 from app.config import settings
-from app.users.models import User
+from app.auth.models import User
 
 bearer_scheme = HTTPBearer()
 

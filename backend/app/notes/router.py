@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db
-from app.users.models import User
+from app.auth.models import User
 from app.notes.schemas import NoteCreate, NoteUpdate, NoteRead
 import app.notes.services as notes_services
 

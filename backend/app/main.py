@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import AppException
 from app.db import engine, ping_db
 
-from app.users import router as auth
+from app.auth import router as auth
 from app.tasks import router as tasks
 from app.notes import router as notes
 from app.time_blocks import router as time_blocks

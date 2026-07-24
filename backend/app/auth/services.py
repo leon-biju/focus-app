@@ -6,8 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import delete, select, update
 
 from app.config import settings
-from app.users.models import RefreshToken, User
-from app.users.exceptions import UserAlreadyExistsError, InvalidRefreshTokenError
+from app.auth.models import RefreshToken, User
+from app.auth.exceptions import UserAlreadyExistsError, InvalidRefreshTokenError
 from app.core.security import (
     DUMMY_HASH,
     generate_refresh_token,

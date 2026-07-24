@@ -5,15 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.db import get_db
-from app.users.schemas import UserCreate, UserRead, LoginRequest, Token
-from app.users.services import (
+from app.auth.schemas import UserCreate, UserRead, LoginRequest, Token
+from app.auth.services import (
     authenticate_user,
     issue_refresh_token,
     register_user,
     revoke_refresh_token,
     rotate_refresh_token,
 )
-from app.users.exceptions import InvalidRefreshTokenError
+from app.auth.exceptions import InvalidRefreshTokenError
 from app.core.security import create_access_token
 from app.core.deps import get_current_user
 
