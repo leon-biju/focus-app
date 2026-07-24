@@ -14,7 +14,7 @@ from app.notes import router as notes
 from app.time_blocks import router as time_blocks
 from app.focus_sessions import router as focus_sessions
 from app.daily_logs import router as daily_logs
-from app.user_settings import router as user_settings
+from app.users import router as users
 
 
 logger = logging.getLogger(__name__)
