@@ -7,6 +7,9 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
+import alembic_postgresql_enum
+
+
 from app.config import settings
 from app.db import Base
 import app.auth.models
