@@ -8,6 +8,7 @@ from sqlalchemy import delete, select, update
 from app.config import settings
 from app.auth.models import RefreshToken, User
 from app.auth.exceptions import UserAlreadyExistsError, InvalidRefreshTokenError
+from app.users.services import create_default_settings
 from app.core.security import (
     DUMMY_HASH,
     generate_refresh_token,
@@ -29,6 +30,8 @@ async def register_user(session: AsyncSession, email: str, password: str) -> Use
     except IntegrityError as e:
         # get_db rolls back once this propagates out of the handler.
         raise UserAlreadyExistsError(email) from e
+
+    await create_default_settings(session, user.id)
 
     return user
 
