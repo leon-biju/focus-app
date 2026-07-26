@@ -5,6 +5,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import StaleDataError
 
+from app.tasks.models import Task
+from app.tasks.schemas import TaskCreate
+import app.tasks.services as task_services
+
 from app.notes.models import Note
 from app.notes.schemas import NoteUpdate
 from app.notes.exceptions import NoteNotFoundException, NoteConflictException
@@ -94,3 +98,21 @@ async def delete(
         await session.flush()
     except StaleDataError as e:
         raise NoteConflictException() from e
+
+
+async def promote_to_task(
+    session: AsyncSession,
+    note_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> Task:
+    # Create a new task then delete the note
+    note = await get(session, note_id, user_id)
+    task_create = TaskCreate(
+        title=note.content,
+        estimate_minutes=30 #TODO: No magic estimated numbers here 
+    )
+    task = await task_services.create(session, task_create, user_id)
+    await delete(session, note_id, user_id)
+
+    return task
+

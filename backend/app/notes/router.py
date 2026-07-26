@@ -5,7 +5,10 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db
+
 from app.auth.models import User
+from app.tasks.schemas import TaskRead
+
 from app.notes.schemas import NoteCreate, NoteUpdate, NoteRead
 import app.notes.services as notes_services
 
@@ -56,3 +59,13 @@ async def delete_note(
     await notes_services.delete(session, note_id, user.id)
     return Response(status_code = status.HTTP_204_NO_CONTENT)
 
+
+@router.post("/{note_id}/promote")
+async def promote_note(
+    note_id: uuid.UUID,
+    session: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+) -> TaskRead:
+    task = await notes_services.promote_to_task(session, note_id, user.id)
+
+    return task
