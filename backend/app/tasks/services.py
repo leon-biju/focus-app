@@ -1,11 +1,12 @@
 from typing import List
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import StaleDataError
 
+from app.core.deps import DayContext
 from app.tasks.schemas import TaskCreate, TaskUpdate, TaskStatus
 from app.tasks.models import Task
 from app.tasks.exceptions import TaskNotFoundException, TaskConflictException
@@ -73,6 +74,48 @@ async def update(
     return task
 
 
+async def complete(
+    session: AsyncSession,
+    task_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> Task:
+
+    task = await get(session, task_id, user_id)
+
+    # Already completed tasks must not have the timestamp changed
+    if task.status is not TaskStatus.done:
+        task.status = TaskStatus.done
+        task.completed_at = datetime.now(UTC)
+
+        try:
+            await session.flush()
+        except StaleDataError as e:
+            raise TaskConflictException() from e
+
+    return task
+
+
+async def uncomplete(
+    session: AsyncSession,
+    task_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> Task:
+
+    task = await get(session, task_id, user_id)
+
+    if task.status is TaskStatus.done:
+        # TODO: Once timeblocks are implemented add a check here to see if progress to 'incomplete' or 'not_started'
+        task.status = TaskStatus.not_started
+        task.completed_at = None
+
+        try:
+            await session.flush()
+        except StaleDataError as e:
+            raise TaskConflictException() from e
+
+    return task
+
+
 async def delete(
     session: AsyncSession,
     task_id: uuid.UUID,
@@ -109,20 +152,19 @@ async def get_user_tasks(
 # Used by the dashboard etc. just all incomplete tasks and tasks that have been completed today
 async def get_today_tasks(
     session: AsyncSession,
-    user_id: uuid.UUID
+    user_id: uuid.UUID,
+    day: DayContext,
 ) -> List[Task]:
-    #TODO: Remember to update with user's preferred day cuttoff time! once that is done
-    # Until then "today" is the UTC day, matching how func.date() reads the
-    # timestamptz column. date.today() would be the API process's local day.
-    today = datetime.now(timezone.utc).date()
-
     result = await session.execute(
         select(Task)
         .where(
             Task.user_id == user_id
             , or_(
-                Task.status == TaskStatus.done,
-                func.date(Task.completed_at) == today
+                Task.status != TaskStatus.done,
+                and_(
+                    Task.completed_at >= day.start,
+                    Task.completed_at < day.end,
+                )
             )
         )
     )

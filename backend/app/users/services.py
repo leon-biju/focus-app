@@ -45,6 +45,7 @@ async def update_settings(
         setattr(settings, field, value)
 
     await session.flush()
+    await session.refresh(settings)
 
     return settings
 

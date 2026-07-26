@@ -16,12 +16,17 @@ class TaskCreate(BaseModel):
     micro_steps: list[MicroStep] = []
 
 class TaskUpdate(BaseModel):
+    # No status field: completion goes through /tasks/{id}/done and in_progress
+    # is set by timeblock linking, so there is one way to change each status.
+    # extra="forbid" so a client still sending status gets a 422 instead of a
+    # silent no-op that looks like a successful tick.
+    model_config = ConfigDict(extra="forbid")
+
     title: str | None = None
     description: str | None = None
     energy_tag: EnergyTag | None = None
     estimate_minutes: int | None = None
     actual_minutes: int | None = None
-    status: TaskStatus | None = None
     micro_steps: list[MicroStep] | None = None
 
 class TaskRead(BaseModel):
@@ -37,10 +42,3 @@ class TaskRead(BaseModel):
     micro_steps: list[MicroStep]
     created_at: datetime
     completed_at: datetime | None
-
-class TaskFilters(BaseModel):
-    status: Annotated[list[TaskStatus] | None, Query()] = None
-    
-    completed_after: datetime | None = None
-    created_after: datetime | None = None
-    created_before: datetime | None = None

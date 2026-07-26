@@ -1,13 +1,12 @@
 from typing import List
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_user, get_db
+from app.core.deps import get_current_user, get_db, get_day_context, DayContext
 from app.auth.models import User
 from app.tasks.schemas import TaskCreate, TaskRead, TaskUpdate
-from app.tasks.exceptions import TaskNotFoundException, TaskConflictException
 import app.tasks.services as task_services
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -33,6 +32,16 @@ async def list_tasks(
     # In future get query paramters in here as well!
     tasks = await task_services.get_user_tasks(session, user.id)
     
+    return tasks
+
+
+@router.get("/today")
+async def todays_tasks(
+    session: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    day: DayContext = Depends(get_day_context)
+) -> List[TaskRead]:
+    tasks = await task_services.get_today_tasks(session, user.id, day)
     return tasks
 
 
@@ -66,12 +75,25 @@ async def delete_task(
     await task_services.delete(session, task_id, user.id)
     return Response(status_code = status.HTTP_204_NO_CONTENT)
 
-@router.get("/today")
-async def todays_tasks(
+
+# The justification behind having a seperate endpoint for setting status is so that the timestamp is guaranteed to have
+# been set/unset
+
+@router.post("/{task_id}/done")
+async def complete_task(
+    task_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
-) -> List[TaskRead]:
-    
+) -> TaskRead:
+    task = await task_services.complete(session, task_id, user.id)
+    return task
 
 
-    pass
+@router.delete("/{task_id}/done")
+async def uncomplete_task(
+    task_id: uuid.UUID,
+    session: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+) -> TaskRead:
+    task = await task_services.uncomplete(session, task_id, user.id)
+    return task
