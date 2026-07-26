@@ -1,7 +1,8 @@
-import { useState } from "react"
-import { ChevronDown, ChevronUp, Sparkles } from "lucide-react"
+import { useState, type KeyboardEvent } from "react"
+import { ChevronDown, ChevronUp, ListChecks, Sparkles } from "lucide-react"
 import { EnergyBadge } from "@/components/energy-badge"
 import { NotesPanel } from "@/components/notes-panel"
+import { useFlipList } from "@/hooks/use-flip-list"
 import { toggleStepAt, useTodayTasks, useToggleMicroStep, useToggleTaskDone } from "@/hooks/use-tasks"
 import type { Task } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
@@ -19,10 +20,26 @@ export function TasksPage() {
   const toggleDone = useToggleTaskDone()
   const toggleStep = useToggleMicroStep()
   const [filter, setFilter] = useState("All")
-  const [openTask, setOpenTask] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const registerRow = useFlipList()
 
   const visible = tasks?.filter(filters.find((f) => f.label === filter)!.match) ?? []
   const openCount = tasks?.filter((t) => t.status !== "done").length ?? 0
+
+  // Any number of tasks can sit open at once
+  const toggleExpanded = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (!next.delete(id)) next.add(id)
+      return next
+    })
+
+  const onRowKeyDown = (event: KeyboardEvent, id: string) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      toggleExpanded(id)
+    }
+  }
 
   return (
     <div className="flex h-full flex-col lg:flex-row">
@@ -51,17 +68,6 @@ export function TasksPage() {
                 {f.label}
               </button>
             ))}
-            <button className="ml-auto flex items-center gap-1.5 rounded-full bg-violet-soft px-3.5 py-2 text-[12.5px] font-semibold text-violet hover:brightness-[.96]">
-              <Sparkles className="size-3.5" strokeWidth={1.8} />
-              Pick for me
-            </button>
-          </div>
-
-          <div className="mt-3 flex items-center gap-2.5 rounded-lg border border-violet bg-violet-soft px-4 py-3">
-            <span className="text-[13px]">
-              Do this one: <strong>Review pull requests</strong>. Don't overthink it.
-            </span>
-            <button className="ml-auto text-xs font-semibold text-violet">Re-roll</button>
           </div>
         </div>
 
@@ -76,44 +82,85 @@ export function TasksPage() {
           {tasks && (
             <div className="rounded-xl border border-border bg-card shadow-[var(--shadow)]">
               {visible.map((t, i) => {
-                const open = openTask === t.id
+                const expandable = t.micro_steps.length > 0
+                const open = expandable && expanded.has(t.id)
                 const done = t.status === "done"
+                const stepsDone = t.micro_steps.filter((s) => s.done).length
                 return (
-                  <div key={t.id} className={i < visible.length - 1 ? "border-b border-linesoft" : ""}>
-                    <div className="flex items-center gap-3 px-4.5 py-3.5">
+                  <div
+                    key={t.id}
+                    ref={registerRow(t.id)}
+                    className={i < visible.length - 1 ? "border-b border-linesoft" : ""}
+                  >
+                    {/* The whole row expands, so the checkbox has to keep its click to itself */}
+                    <div
+                      role={expandable ? "button" : undefined}
+                      tabIndex={expandable ? 0 : undefined}
+                      aria-expanded={expandable ? open : undefined}
+                      onClick={expandable ? () => toggleExpanded(t.id) : undefined}
+                      onKeyDown={expandable ? (e) => onRowKeyDown(e, t.id) : undefined}
+                      className={cn(
+                        "group flex items-center gap-3 px-4.5 py-3.5",
+                        expandable && "cursor-pointer"
+                      )}
+                    >
                       <button
-                        onClick={() => toggleDone.mutate({ task: t, done: !done })}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleDone.mutate({ task: t, done: !done })
+                        }}
                         aria-label={done ? `Reopen ${t.title}` : `Complete ${t.title}`}
                         className={cn(
                           "size-5 flex-none cursor-pointer rounded-md border-[1.5px] transition-colors",
                           done ? "border-primary bg-primary" : "border-line hover:border-primary"
                         )}
                       />
-                      <button
-                        onClick={() => setOpenTask(open ? null : t.id)}
-                        className={cn(
-                          "flex-1 cursor-pointer text-left text-sm font-medium",
-                          done && "text-ink-3 line-through"
+                      <span className="flex min-w-0 flex-1 items-center gap-2">
+                        <span
+                          className={cn(
+                            "truncate text-sm font-medium",
+                            done && "text-ink-3 line-through"
+                          )}
+                        >
+                          {t.title}
+                        </span>
+                        {/* Steps are the whole point of the row expanding, so say so next to the title */}
+                        {expandable && (
+                          <span
+                            className={cn(
+                              "flex flex-none items-center gap-1 rounded-full px-1.5 py-[2px] font-mono text-[11px]",
+                              stepsDone === t.micro_steps.length
+                                ? "bg-green-soft text-green"
+                                : "bg-muted text-ink-3"
+                            )}
+                          >
+                            <ListChecks className="size-3" strokeWidth={2} />
+                            {stepsDone}/{t.micro_steps.length}
+                          </span>
                         )}
-                      >
-                        {t.title}
-                      </button>
+                      </span>
                       <EnergyBadge level={t.energy_tag} />
                       <span className="w-9 text-right font-mono text-[11.5px] text-ink-3">
                         {t.estimate_minutes}m
                       </span>
-                      {t.micro_steps.length > 0 ? (
+                      {expandable ? (
                         open ? (
-                          <ChevronUp className="size-3.5 text-ink-3" strokeWidth={1.8} />
+                          <ChevronUp
+                            className="size-3.5 text-ink-3 transition-colors group-hover:text-ink"
+                            strokeWidth={1.8}
+                          />
                         ) : (
-                          <ChevronDown className="size-3.5 text-ink-3" strokeWidth={1.8} />
+                          <ChevronDown
+                            className="size-3.5 text-ink-3 transition-colors group-hover:text-ink"
+                            strokeWidth={1.8}
+                          />
                         )
                       ) : (
                         <span className="size-3.5" />
                       )}
                     </div>
 
-                    {open && t.micro_steps.length > 0 && (
+                    {open && (
                       <div className="flex flex-col gap-2 py-0.5 pr-4.5 pb-3.5 pl-12.5">
                         <div className="text-[11px] font-semibold tracking-[.06em] text-ink-3 uppercase">
                           Micro-steps
