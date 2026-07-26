@@ -12,13 +12,22 @@ class UserProfileRead(BaseModel):
 
     id: uuid.UUID
     email: EmailStr
-    display_name: str | None
+    display_name: str
     created_at: datetime
 
 
 class UserProfileUpdate(BaseModel):
-    # This is the only non auth field in user
-    display_name: str | None = Field(default=None, max_length=80)
+    # This is the only non auth field in user. Required and non-blank: the column is
+    # NOT NULL, so there's no "clear it" state to fall back to.
+    display_name: str = Field(max_length=80)
+
+    @field_validator("display_name")
+    @classmethod
+    def display_name_must_not_be_blank(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("display name must not be blank")
+        return stripped
 
 
 class UserSettingsRead(BaseModel):

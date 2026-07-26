@@ -55,7 +55,6 @@ async def update_profile(
     payload: UserProfileUpdate,
     user: User,
 ) -> User:
-    # No exclude_none since display_name can be null
     changes = payload.model_dump(exclude_unset=True)
     for field, value in changes.items():
         setattr(user, field, value)

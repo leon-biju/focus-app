@@ -18,9 +18,11 @@ from app.core.security import (
 )
  
 async def register_user(session: AsyncSession, email: str, password: str) -> User:
+    normalized_email = email.lower().strip()
     user = User(
-        email=email.lower().strip(),
-        password_hash=hash_password(password)
+        email=normalized_email,
+        password_hash=hash_password(password),
+        display_name=normalized_email.split('@')[0],
     )
 
     session.add(user)
