@@ -26,6 +26,28 @@ export interface MicroStepsUpdate {
   micro_steps: MicroStep[]
 }
 
+// The editable half of a task. Status is missing on purpose: the backend forbids it in
+// TaskUpdate, completion goes through /done instead.
+export interface TaskDraft {
+  title: string
+  description: string | null
+  energy_tag: EnergyTag | null
+  estimate_minutes: number
+  micro_steps: MicroStep[]
+}
+
+export function createTask(draft: TaskDraft): Promise<Task> {
+  return post<Task>("/tasks", draft)
+}
+
+export function updateTask({ id, ...changes }: TaskDraft & { id: string }): Promise<Task> {
+  return patch<Task>(`/tasks/${id}`, changes)
+}
+
+export function deleteTask(id: string): Promise<void> {
+  return del(`/tasks/${id}`)
+}
+
 // Not-done tasks of any age, plus whatever was completed today
 export function fetchTodayTasks(): Promise<Task[]> {
   return get<Task[]>("/tasks/today")

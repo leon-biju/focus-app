@@ -1,7 +1,16 @@
 import { useState, type KeyboardEvent } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { todayTasksKey } from "@/hooks/use-tasks"
 import { ApiError } from "@/lib/api"
-import { createNote, deleteNote, fetchNotes, updateNote, type Note } from "@/lib/notes"
+import {
+  createNote,
+  deleteNote,
+  fetchNotes,
+  promoteNote,
+  updateNote,
+  type Note,
+} from "@/lib/notes"
+import type { Task } from "@/lib/tasks"
 
 export const notesKey = ["notes"] as const
 
@@ -73,6 +82,19 @@ export function useNoteComposer(onCreated?: (note: Note) => void) {
     isPending: create.isPending,
     canSubmit: draft.trim().length > 0 && !create.isPending,
   }
+}
+
+// One call moves it between two lists, so both caches are patched from the one response:
+// the note is gone server-side and the task is new and open, so it goes on top.
+export function usePromoteNote() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: promoteNote,
+    onSuccess: (task, id) => {
+      queryClient.setQueryData<Note[]>(notesKey, (prev) => prev?.filter((n) => n.id !== id))
+      queryClient.setQueryData<Task[]>(todayTasksKey, (prev) => [task, ...(prev ?? [])])
+    },
+  })
 }
 
 export function useDeleteNote() {

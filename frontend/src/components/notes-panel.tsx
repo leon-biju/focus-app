@@ -2,8 +2,15 @@ import { useState } from "react"
 import { ListPlus, X } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { useDeleteNote, useNoteComposer, useNotes, useUpdateNote } from "@/hooks/use-notes"
+import {
+  useDeleteNote,
+  useNoteComposer,
+  useNotes,
+  usePromoteNote,
+  useUpdateNote,
+} from "@/hooks/use-notes"
 import type { Note } from "@/lib/notes"
+import type { Task } from "@/lib/tasks"
 
 function timeAgo(iso: string) {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000)
@@ -23,10 +30,11 @@ function timeAgo(iso: string) {
   return `${days}d ago`
 }
 
-function NoteCard({ note }: { note: Note }) {
+function NoteCard({ note, onPromoted }: { note: Note; onPromoted?: (task: Task) => void }) {
   const [draft, setDraft] = useState<string | null>(null)
   const update = useUpdateNote()
   const remove = useDeleteNote()
+  const promote = usePromoteNote()
   const editing = draft !== null
 
   const save = () => {
@@ -76,7 +84,11 @@ function NoteCard({ note }: { note: Note }) {
         <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           <button
             title="Make a task"
-            className="grid size-6 place-items-center rounded-md text-ink-3 hover:bg-accent-soft hover:text-primary"
+            disabled={promote.isPending}
+            // The task lands with a placeholder estimate and no tag, so hand it
+            // straight to whoever can open it for a once-over
+            onClick={() => promote.mutate(note.id, { onSuccess: onPromoted })}
+            className="grid size-6 cursor-pointer place-items-center rounded-md text-ink-3 hover:bg-accent-soft hover:text-primary disabled:opacity-50"
           >
             <ListPlus className="size-3.5" strokeWidth={1.8} />
           </button>
@@ -94,7 +106,7 @@ function NoteCard({ note }: { note: Note }) {
   )
 }
 
-export function NotesPanel() {
+export function NotesPanel({ onPromoted }: { onPromoted?: (task: Task) => void }) {
   const { data: notes, isPending, isError } = useNotes()
   const composer = useNoteComposer()
 
@@ -125,7 +137,7 @@ export function NotesPanel() {
 
       <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-1 pb-10">
         <div className="flex flex-col gap-1.5">
-          {notes?.map((n) => <NoteCard key={n.id} note={n} />)}
+          {notes?.map((n) => <NoteCard key={n.id} note={n} onPromoted={onPromoted} />)}
         </div>
 
         {isPending && <p className="py-10 text-center text-[13px] text-ink-3">Loading notes…</p>}

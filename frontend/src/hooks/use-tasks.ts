@@ -2,9 +2,12 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tansta
 import { ApiError } from "@/lib/api"
 import {
   completeTask,
+  createTask,
+  deleteTask,
   fetchTodayTasks,
   uncompleteTask,
   updateMicroSteps,
+  updateTask,
   type MicroStep,
   type Task,
 } from "@/lib/tasks"
@@ -79,6 +82,36 @@ export function useToggleMicroStep() {
     onMutate: ({ task, micro_steps }) => optimisticallyWrite(queryClient, { ...task, micro_steps }),
     onError: (error, _variables, context) => rollback(queryClient, error, context),
     onSuccess: (updated) => writeTask(queryClient, updated),
+  })
+}
+
+// A brand new task is always open, so it belongs on top where the sort would put it anyway
+export function useCreateTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: createTask,
+    onSuccess: (task) =>
+      queryClient.setQueryData<Task[]>(todayTasksKey, (prev) => [task, ...(prev ?? [])]),
+  })
+}
+
+// Edits come from a dialog that waits for the save, so there's nothing to paint early here
+export function useUpdateTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: updateTask,
+    onSuccess: (updated) => writeTask(queryClient, updated),
+    onError: (error) => rollback(queryClient, error),
+  })
+}
+
+// 204 back, so drop the row rather than asking the server what's left
+export function useDeleteTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteTask,
+    onSuccess: (_result, id) =>
+      queryClient.setQueryData<Task[]>(todayTasksKey, (prev) => prev?.filter((t) => t.id !== id)),
   })
 }
 

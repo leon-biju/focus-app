@@ -1,4 +1,5 @@
 import { get, post, patch, del } from "@/lib/api"
+import type { Task } from "@/lib/tasks"
 
 // Same as backend's NoteRead
 export interface Note {
@@ -28,4 +29,10 @@ export function updateNote({ id, content, version_id }: NoteUpdate): Promise<Not
 
 export function deleteNote(id: string): Promise<void> {
   return del(`/notes/${id}`)
+}
+
+// Spends the note: the backend makes the task and deletes the note in one call,
+// so the new task comes back instead of the note
+export function promoteNote(id: string): Promise<Task> {
+  return post<Task>(`/notes/${id}/promote`)
 }

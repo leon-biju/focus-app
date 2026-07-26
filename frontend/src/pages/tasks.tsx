@@ -1,7 +1,9 @@
 import { useState, type KeyboardEvent } from "react"
-import { ChevronDown, ChevronUp, ListChecks, Sparkles } from "lucide-react"
+import { ChevronDown, ChevronUp, ListChecks, Pencil, Plus } from "lucide-react"
 import { EnergyBadge } from "@/components/energy-badge"
 import { NotesPanel } from "@/components/notes-panel"
+import { TaskDialog } from "@/components/task-dialog"
+import { Button } from "@/components/ui/button"
 import { useFlipList } from "@/hooks/use-flip-list"
 import { toggleStepAt, useTodayTasks, useToggleMicroStep, useToggleTaskDone } from "@/hooks/use-tasks"
 import type { Task } from "@/lib/tasks"
@@ -21,6 +23,8 @@ export function TasksPage() {
   const toggleStep = useToggleMicroStep()
   const [filter, setFilter] = useState("All")
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  // undefined = closed, null = creating, a task = editing that one
+  const [editing, setEditing] = useState<Task | null | undefined>(undefined)
   const registerRow = useFlipList()
 
   const visible = tasks?.filter(filters.find((f) => f.label === filter)!.match) ?? []
@@ -43,14 +47,21 @@ export function TasksPage() {
 
   return (
     <div className="flex h-full flex-col lg:flex-row">
-      <NotesPanel />
+      {/* A promoted note arrives as a bare task, so open it for the details right away */}
+      <NotesPanel onPromoted={(task) => setEditing(task)} />
 
       {/* Tasks section (right) */}
       <section className="flex min-h-0 flex-1 flex-col">
         <div className="flex-none px-8 pt-9 pb-4">
-          <div className="flex items-baseline justify-between">
+          <div className="flex items-center justify-between gap-4">
             <h1 className="font-heading text-[22px] font-semibold tracking-tight">Tasks</h1>
-            {tasks && <span className="text-[11.5px] text-ink-3">{openCount} open</span>}
+            <div className="flex items-center gap-3">
+              {tasks && <span className="text-[11.5px] text-ink-3">{openCount} open</span>}
+              <Button size="sm" onClick={() => setEditing(null)}>
+                <Plus />
+                New task
+              </Button>
+            </div>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -143,6 +154,19 @@ export function TasksPage() {
                       <span className="w-9 text-right font-mono text-[11.5px] text-ink-3">
                         {t.estimate_minutes}m
                       </span>
+                      {/* Quiet until you're on the row, but never hidden from the keyboard */}
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={`Edit ${t.title}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditing(t)
+                        }}
+                        className="text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:text-ink"
+                      >
+                        <Pencil />
+                      </Button>
                       {expandable ? (
                         open ? (
                           <ChevronUp
@@ -194,9 +218,13 @@ export function TasksPage() {
               })}
 
               {tasks.length === 0 && (
-                <p className="px-4.5 py-10 text-center text-[13px] text-ink-3">
-                  Nothing on today's list.
-                </p>
+                <div className="flex flex-col items-center gap-3 px-4.5 py-10">
+                  <p className="text-[13px] text-ink-3">Nothing on today's list.</p>
+                  <Button variant="outline" size="sm" onClick={() => setEditing(null)}>
+                    <Plus />
+                    Add the first one
+                  </Button>
+                </div>
               )}
 
               {tasks.length > 0 && visible.length === 0 && (
@@ -208,6 +236,12 @@ export function TasksPage() {
           )}
         </div>
       </section>
+
+      <TaskDialog
+        open={editing !== undefined}
+        onOpenChange={(open) => !open && setEditing(undefined)}
+        task={editing ?? undefined}
+      />
     </div>
   )
 }
