@@ -16,7 +16,7 @@ from app.focus_sessions import router as focus_sessions
 from app.daily_logs import router as daily_logs
 from app.users import router as users
 
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
