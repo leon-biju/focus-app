@@ -29,7 +29,7 @@ const friction = [
 
 const energyRows = [
   { label: "High energy", color: "text-amber", w: "88%", note: "5.1/day" },
-  { label: "Steady", color: "text-green", w: "64%", note: "3.7/day" },
+  { label: "Medium energy", color: "text-green", w: "64%", note: "3.7/day" },
   { label: "Low energy", color: "text-blue", w: "31%", note: "1.8/day" },
 ]
 

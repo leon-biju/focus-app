@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 const styles: Record<EnergyTag, { label: string; className: string }> = {
   high: { label: "High energy", className: "bg-amber-soft text-amber" },
-  medium: { label: "Steady", className: "bg-green-soft text-green" },
+  medium: { label: "Medium energy", className: "bg-green-soft text-green" },
   low: { label: "Low energy", className: "bg-blue-soft text-blue" },
 }
 

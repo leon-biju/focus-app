@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 const filters = [
   { label: "All", match: () => true },
   { label: "High energy", match: (t: Task) => t.energy_tag === "high" },
-  { label: "Steady", match: (t: Task) => t.energy_tag === "medium" },
+  { label: "Medium energy", match: (t: Task) => t.energy_tag === "medium" },
   { label: "Low energy", match: (t: Task) => t.energy_tag === "low" },
   { label: "Under 15m", match: (t: Task) => t.estimate_minutes <= 15 },
 ]
