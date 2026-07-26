@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -16,6 +17,9 @@ from app.core.security import (
     hash_refresh_token,
     verify_password,
 )
+
+logger = logging.getLogger(__name__)
+
  
 async def register_user(session: AsyncSession, email: str, password: str) -> User:
     normalized_email = email.lower().strip()
@@ -104,6 +108,7 @@ async def rotate_refresh_token(session: AsyncSession, raw_token: str) -> tuple[u
     if token.revoked_at is not None:
         # Token has been revoked already so we revoke all of this family's token for
         # security reasons
+        logger.warning(f"ATTEMPT TO USE OLD REFRESH KEY KILLING ALL THE FAMILY'S TOKENS")
         await session.execute(
             update(RefreshToken)
             .where(
