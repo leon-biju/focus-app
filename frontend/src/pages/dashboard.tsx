@@ -8,7 +8,7 @@ import { useNoteComposer } from "@/hooks/use-notes"
 const todaysThree = [
   { name: "Send the invoice to Meridian", done: true, energy: "low" as const, est: "~10m" },
   { name: "Draft Q3 project brief", done: false, energy: "high" as const, est: "~50m" },
-  { name: "Book dentist appointment", done: false, energy: "steady" as const, est: "~5m" },
+  { name: "Book dentist appointment", done: false, energy: "medium" as const, est: "~5m" },
 ]
 
 const upNext = [

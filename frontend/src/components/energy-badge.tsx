@@ -1,14 +1,15 @@
+import type { EnergyTag } from "@/lib/tasks"
 import { cn } from "@/lib/utils"
 
-export type EnergyLevel = "high" | "steady" | "low"
-
-const styles: Record<EnergyLevel, { label: string; className: string }> = {
+const styles: Record<EnergyTag, { label: string; className: string }> = {
   high: { label: "High energy", className: "bg-amber-soft text-amber" },
-  steady: { label: "Steady", className: "bg-green-soft text-green" },
+  medium: { label: "Steady", className: "bg-green-soft text-green" },
   low: { label: "Low energy", className: "bg-blue-soft text-blue" },
 }
 
-export function EnergyBadge({ level, className }: { level: EnergyLevel; className?: string }) {
+// Tagging is optional on the backend, so an untagged task just gets no badge
+export function EnergyBadge({ level, className }: { level: EnergyTag | null; className?: string }) {
+  if (!level) return null
   const s = styles[level]
   return (
     <span
