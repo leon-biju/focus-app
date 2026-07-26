@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCurrentUser, useLogout } from "@/hooks/use-auth"
+import { useMe } from "@/hooks/use-settings"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -31,8 +32,12 @@ const navItems = [
 
 export function Sidebar() {
   const { data: user } = useCurrentUser()
+  const { data: me } = useMe()
   const logout = useLogout()
   const navigate = useNavigate()
+
+  // Fall back to the email so this still reads right before /users/me lands
+  const label = me?.profile.display_name ?? user?.email
 
   return (
     <nav className="flex w-56 flex-none flex-col border-r border-border px-3 py-5 box-border">
@@ -66,9 +71,9 @@ export function Sidebar() {
       <DropdownMenu>
         <DropdownMenuTrigger className="mt-2.5 flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium text-muted-foreground transition-colors hover:bg-linesoft data-[state=open]:bg-linesoft">
           <Avatar size="sm" className="flex-none">
-            <AvatarFallback className="uppercase">{user?.email.charAt(0) ?? "?"}</AvatarFallback>
+            <AvatarFallback className="uppercase">{label?.charAt(0) ?? "?"}</AvatarFallback>
           </Avatar>
-          <span className="truncate">{user?.email ?? "Account"}</span>
+          <span className="truncate">{label ?? "Account"}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="start" className="w-48">
           <DropdownMenuItem asChild className="cursor-pointer">

@@ -3,6 +3,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@custom-variant data-checked (&[data-state="checked"]);
+@custom-variant data-unchecked (&[data-state="unchecked"]);
+
 @theme inline {
     --font-sans: 'Instrument Sans', sans-serif;
     --font-heading: 'Bricolage Grotesque', sans-serif;

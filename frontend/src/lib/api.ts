@@ -59,6 +59,25 @@ export class ApiError extends Error {
   }
 }
 
+// The custom HTTPExceptions put a plain string in detail, but a 422 from pydantic request validation
+// puts an array of error objects there, which would otherwise toast as "[object Object]"
+function readDetail(body: unknown, fallback: string): string {
+  const detail = (body as { detail?: unknown } | null)?.detail
+  if (typeof detail === "string") {
+    return detail
+  }
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((item) => (item as { msg?: unknown }).msg)
+      .filter((msg): msg is string => typeof msg === "string")
+    if (messages.length) {
+      // Pydantic prefixes value errors with "Value error, " which reads like noise here
+      return messages.map((msg) => msg.replace(/^Value error, /, "")).join(". ")
+    }
+  }
+  return fallback
+}
+
 async function request<T>(path: string, options: RequestInit = {}, retried = false): Promise<T> {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -83,7 +102,7 @@ async function request<T>(path: string, options: RequestInit = {}, retried = fal
       return request<T>(path, options, true);
     }
     const body = await response.json().catch(() => null);
-    throw new ApiError(response.status, body?.detail ?? response.statusText)
+    throw new ApiError(response.status, readDetail(body, response.statusText))
   }
 
   if (response.status === 204) {
