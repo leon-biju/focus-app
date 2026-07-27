@@ -11,7 +11,7 @@ import app.tasks.services as task_services
 
 from app.notes.models import Note
 from app.notes.schemas import NoteUpdate
-from app.notes.exceptions import NoteNotFoundException, NoteConflictException
+from app.notes.exceptions import NoteNotFoundError, NoteConflictError
 
 async def create(
     session: AsyncSession,
@@ -44,7 +44,7 @@ async def get(
 
     note = result.scalar_one_or_none()
     if note is None:
-        raise NoteNotFoundException()
+        raise NoteNotFoundError()
     
     return note
 
@@ -72,7 +72,7 @@ async def update(
 
     if note.version_id != payload.version_id:
         # Client was relying on an older note and edited based on that. Make them reload!
-        raise NoteConflictException()
+        raise NoteConflictError()
 
     note.content = payload.content
 
@@ -80,7 +80,7 @@ async def update(
         await session.flush()
     except StaleDataError as e:
         # Same issue as above but the other write landed after our check above.
-        raise NoteConflictException() from e
+        raise NoteConflictError() from e
 
     return note
 
@@ -97,7 +97,7 @@ async def delete(
     try:
         await session.flush()
     except StaleDataError as e:
-        raise NoteConflictException() from e
+        raise NoteConflictError() from e
 
 
 async def promote_to_task(

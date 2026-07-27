@@ -7,9 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import StaleDataError
 
 from app.core.deps import DayContext
-from app.tasks.schemas import TaskCreate, TaskUpdate, TaskStatus
-from app.tasks.models import Task
-from app.tasks.exceptions import TaskNotFoundException, TaskConflictException
+from app.tasks.schemas import TaskCreate, TaskUpdate
+from app.tasks.models import Task, TaskStatus
+from app.tasks.exceptions import TaskNotFoundError, TaskConflictError
 
 async def create(
     session: AsyncSession,
@@ -42,7 +42,7 @@ async def get(
 
     task = result.scalar_one_or_none()
     if task is None:
-        raise TaskNotFoundException()
+        raise TaskNotFoundError()
     
     return task
 
@@ -69,7 +69,7 @@ async def update(
     except StaleDataError as e:
         # Someone else wrote this row between our read and our flush.
         # get_db rolls this back automatically.
-        raise TaskConflictException() from e
+        raise TaskConflictError() from e
 
     return task
 
@@ -90,7 +90,7 @@ async def complete(
         try:
             await session.flush()
         except StaleDataError as e:
-            raise TaskConflictException() from e
+            raise TaskConflictError() from e
 
     return task
 
@@ -111,7 +111,7 @@ async def uncomplete(
         try:
             await session.flush()
         except StaleDataError as e:
-            raise TaskConflictException() from e
+            raise TaskConflictError() from e
 
     return task
 
@@ -128,12 +128,13 @@ async def delete(
     try:
         await session.flush()
     except StaleDataError as e:
-        raise TaskConflictException() from e
+        raise TaskConflictError() from e
     
 
 
 
-#lol get rid of this replace with filter_by
+# Every task, unordered and unfiltered. Filtering will move here as query params
+# once something other than /tasks/today needs it.
 async def get_user_tasks(
     session: AsyncSession,
     user_id: uuid.UUID

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.exceptions import AppException
+from app.core.exceptions import AppError
 from app.db import engine, ping_db
 
 from app.auth import router as auth

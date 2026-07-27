@@ -1,9 +1,9 @@
-from app.core.exceptions import AppException
+from app.core.exceptions import AppError
 
-class TaskNotFoundException(AppException):
+class TaskNotFoundError(AppError):
     status_code = 404
     detail = "Task not found."
     
-class TaskConflictException(AppException):
+class TaskConflictError(AppError):
     status_code = 409
     detail = "Task was modified by another request. Try again."
