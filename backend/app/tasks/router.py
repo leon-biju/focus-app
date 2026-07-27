@@ -1,7 +1,7 @@
 from typing import List
 import uuid
 
-from fastapi import APIRouter, Depends, status, Response
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db, get_day_context, DayContext

@@ -11,9 +11,6 @@ from app.db import engine, ping_db
 from app.auth import router as auth
 from app.tasks import router as tasks
 from app.notes import router as notes
-from app.time_blocks import router as time_blocks
-from app.focus_sessions import router as focus_sessions
-from app.daily_logs import router as daily_logs
 from app.users import router as users
 
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +50,6 @@ def health():
     return {"ok": True}
 
 # Universal exception handler
-@app.exception_handler(AppException)
-async def app_exception_handler(request, exc: AppException):
+@app.exception_handler(AppError)
+async def app_error_handler(request, exc: AppError):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})

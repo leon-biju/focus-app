@@ -108,7 +108,7 @@ async def rotate_refresh_token(session: AsyncSession, raw_token: str) -> tuple[u
     if token.revoked_at is not None:
         # Token has been revoked already so we revoke all of this family's token for
         # security reasons
-        logger.warning(f"ATTEMPT TO USE OLD REFRESH KEY KILLING ALL THE FAMILY'S TOKENS")
+        logger.warning("ATTEMPT TO USE OLD REFRESH KEY KILLING ALL THE FAMILY'S TOKENS")
         await session.execute(
             update(RefreshToken)
             .where(

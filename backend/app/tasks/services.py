@@ -47,10 +47,6 @@ async def get(
     return task
 
 
-async def filter_by() -> List[Task]:
-    pass
-
-
 async def update(
     session: AsyncSession,
     payload: TaskUpdate,
