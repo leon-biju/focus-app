@@ -16,6 +16,7 @@ import app.auth.models
 import app.tasks.models
 import app.notes.models
 import app.users.models
+import app.time_blocks.models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
