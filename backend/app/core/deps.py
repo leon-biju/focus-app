@@ -44,6 +44,13 @@ class DayContext:
     tz: str
     day_start: time
 
+    def window_for(self, on: date | None) -> tuple[datetime, datetime]:
+        # For endpoints that take an optional ?date=. None means today, which is
+        # already computed, so only another day costs the conversion.
+        if on is None or on == self.today:
+            return self.start, self.end
+        return day_window(on, self.tz, self.day_start)
+
 
 async def get_day_context(
     user: User = Depends(get_current_user),
