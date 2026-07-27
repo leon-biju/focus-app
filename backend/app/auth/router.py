@@ -48,7 +48,7 @@ def clear_refresh_cookie(response: Response):
     )
 
 
-@router.post("/register")
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(payload: UserCreate, session: AsyncSession = Depends(get_db)) -> UserRead:
     user = await register_user(session, payload.email, payload.password)
 
@@ -104,7 +104,7 @@ async def refresh(
     return error
 
 
-@router.post("/logout")
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
     response: Response,
     refresh_token: str | None = Cookie(default=None),
@@ -118,8 +118,6 @@ async def logout(
     if refresh_token is not None:
         await revoke_refresh_token(session, refresh_token)
     clear_refresh_cookie(response)
-
-    return Response(status_code = status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/me")

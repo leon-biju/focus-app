@@ -11,7 +11,7 @@ import app.tasks.services as task_services
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
-@router.post("")
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_task(
     payload: TaskCreate,
     session: AsyncSession = Depends(get_db),
@@ -66,14 +66,13 @@ async def update_task(
     return task
 
 
-@router.delete("/{task_id}")
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     task_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
     await task_services.delete(session, task_id, user.id)
-    return Response(status_code = status.HTTP_204_NO_CONTENT)
 
 
 # The justification behind having a seperate endpoint for setting status is so that the timestamp is guaranteed to have

@@ -14,7 +14,7 @@ import app.notes.services as notes_services
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
-@router.post("")
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_note(
     payload: NoteCreate,
     session: AsyncSession = Depends(get_db),
@@ -50,17 +50,16 @@ async def update_note(
     note = await notes_services.update(session, payload, note_id, user.id)
     return note
 
-@router.delete("/{note_id}")
+@router.delete("/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_note(
     note_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
     await notes_services.delete(session, note_id, user.id)
-    return Response(status_code = status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/{note_id}/promote")
+@router.post("/{note_id}/promote", status_code=status.HTTP_201_CREATED)
 async def promote_note(
     note_id: uuid.UUID,
     session: AsyncSession = Depends(get_db),
