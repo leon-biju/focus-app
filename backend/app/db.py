@@ -1,7 +1,8 @@
 from datetime import datetime
 
+from fastapi import Request
 from sqlalchemy import DateTime, text
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
 
@@ -17,13 +18,28 @@ class Base(DeclarativeBase):
     # counts as "today") belongs in the user's cutoff setting, not in here.
     type_annotation_map = {datetime: DateTime(timezone=True)}
 
-async def get_db():
-    # Every time this dependency is injected it counts as 1 transaction
-    # Therefore multiple service calls using the same session will be commited at once
-    # Easy to rollback etc.
+async def db_session_middleware(request: Request, call_next):
+    # One session, therefore one transaction, per request
+    # Middleware so that this session guaranteed dies before the response is sent
+    # That way any writes can be made before we send out the response
+
     async with SessionLocal() as session:
-        yield session
-        await session.commit()
+        request.state.db = session
+
+        response = await call_next(request)
+
+        # Without this check a 409 or a 422 would commit the
+        # partial writes it was raised to prevent.
+        if response.status_code < 400:
+            await session.commit()
+        else:
+            await session.rollback()
+
+        return response
+
+
+async def get_db(request: Request) -> AsyncSession:
+    return request.state.db
 
 async def ping_db():
     # Test that the db connection actually works before we attempt to 

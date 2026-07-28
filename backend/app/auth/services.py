@@ -34,7 +34,7 @@ async def register_user(session: AsyncSession, email: str, password: str) -> Use
     try:
         await session.flush()
     except IntegrityError as e:
-        # get_db rolls back once this propagates out of the handler.
+        # db_session_middleware rolls back once this propagates out of the handler.
         raise UserAlreadyExistsError(email) from e
 
     await create_default_settings(session, user.id)

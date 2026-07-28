@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.exceptions import AppError
-from app.db import engine, ping_db
+from app.db import db_session_middleware, engine, ping_db
 
 from app.auth import router as auth
 from app.tasks import router as tasks
@@ -31,6 +31,8 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 app = FastAPI(title="Focus API", lifespan=lifespan)
+
+app.middleware("http")(db_session_middleware)
 
 app.add_middleware(
     CORSMiddleware,

@@ -64,7 +64,7 @@ async def update(
         await session.flush()
     except StaleDataError as e:
         # Someone else wrote this row between our read and our flush.
-        # get_db rolls this back automatically.
+        # db_session_middleware rolls this back automatically.
         raise TaskConflictError() from e
 
     return task
