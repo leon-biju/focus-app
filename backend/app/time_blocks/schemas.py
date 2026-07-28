@@ -1,0 +1,41 @@
+import uuid
+from datetime import datetime
+from pydantic import AwareDatetime, BaseModel, ConfigDict, model_validator
+
+# AwareDatetime on the inbound fields so that we can have a timezone field
+
+class TimeBlockCreate(BaseModel):
+    title: str
+    start_at: AwareDatetime
+    end_at: AwareDatetime
+    task_id: uuid.UUID | None = None
+    category_label: str | None = None
+    category_color: str | None = None
+
+    @model_validator(mode="after")
+    def end_after_start(self):
+        if self.end_at <= self.start_at:
+            raise ValueError("end_at must be after start_at")
+        return self
+
+class TimeBlockUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = None
+    start_at: AwareDatetime | None = None
+    end_at: AwareDatetime | None = None
+    task_id: uuid.UUID | None = None
+    category_label: str | None = None
+    category_color: str | None = None
+
+class TimeBlockRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    task_id: uuid.UUID | None
+    title: str
+    category_label: str | None
+    category_color: str | None
+    start_at: datetime
+    end_at: datetime
+    created_at: datetime

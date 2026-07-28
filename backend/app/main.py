@@ -12,6 +12,7 @@ from app.auth import router as auth
 from app.tasks import router as tasks
 from app.notes import router as notes
 from app.users import router as users
+from app.time_blocks import router as time_blocks
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,6 +47,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(tasks.router, prefix="/api")
 app.include_router(notes.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
+app.include_router(time_blocks.router, prefix="/api")
 
 @app.get("/api/health")
 def health():
