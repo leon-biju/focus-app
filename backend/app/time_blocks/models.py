@@ -16,6 +16,7 @@ class TimeBlock(Base):
     task_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("tasks.id", ondelete="SET NULL"), index=True)
 
     title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
 
     # users can choose the category names and colours to their liking
     category_label: Mapped[str | None] = mapped_column(Text)

@@ -6,6 +6,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, model_validator
 
 class TimeBlockCreate(BaseModel):
     title: str
+    description: str | None = None
     start_at: AwareDatetime
     end_at: AwareDatetime
     task_id: uuid.UUID | None = None
@@ -22,6 +23,7 @@ class TimeBlockUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     title: str | None = None
+    description: str | None = None
     start_at: AwareDatetime | None = None
     end_at: AwareDatetime | None = None
     task_id: uuid.UUID | None = None
@@ -34,6 +36,7 @@ class TimeBlockRead(BaseModel):
     id: uuid.UUID
     task_id: uuid.UUID | None
     title: str
+    description: str | None = None
     category_label: str | None
     category_color: str | None
     start_at: datetime
