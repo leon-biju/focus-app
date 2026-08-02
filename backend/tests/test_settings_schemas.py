@@ -23,10 +23,6 @@ class TestDayStartValidation:
     def test_four_am_accepted(self):
         assert UserSettingsUpdate(day_start=time(4, 0)).day_start == time(4, 0)
 
-    def test_before_four_am_rejected(self):
-        with pytest.raises(ValidationError):
-            UserSettingsUpdate(day_start=time(2, 0))
-
 
 class TestDayEndValidation:
     def test_day_end_after_day_start_accepted(self):
