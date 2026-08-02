@@ -48,9 +48,8 @@ export function deleteTask(id: string): Promise<void> {
   return del(`/tasks/${id}`)
 }
 
-// Not-done tasks of any age, plus whatever was completed today
 export function fetchTodayTasks(): Promise<Task[]> {
-  return get<Task[]>("/tasks/today")
+  return get<Task[]>("/tasks?view=today")
 }
 
 export function completeTask(id: string): Promise<Task> {
