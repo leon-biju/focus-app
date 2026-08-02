@@ -39,6 +39,8 @@ class Task(Base):
         default=TaskStatus.not_started
     )
 
+    category_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"))
+
     micro_steps: Mapped[List[Dict[str, Any]]] = mapped_column(
         MutableList.as_mutable(JSON),
         default=list

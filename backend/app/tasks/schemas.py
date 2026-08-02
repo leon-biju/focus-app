@@ -21,6 +21,7 @@ class TaskCreate(BaseModel):
     description: str | None = None
     energy_tag: EnergyTag | None = None
     estimate_minutes: int
+    category_id: uuid.UUID | None = None
     micro_steps: list[MicroStep] = []
 
 class TaskUpdate(BaseModel):
@@ -35,6 +36,7 @@ class TaskUpdate(BaseModel):
     energy_tag: EnergyTag | None = None
     estimate_minutes: int | None = None
     actual_minutes: int | None = None
+    category_id: uuid.UUID | None = None
     micro_steps: list[MicroStep] | None = None
 
 class TaskRead(BaseModel):
@@ -46,6 +48,7 @@ class TaskRead(BaseModel):
     energy_tag: EnergyTag | None
     estimate_minutes: int
     actual_minutes: int | None
+    category_id: uuid.UUID | None
     status: TaskStatus
     micro_steps: list[MicroStep]
     created_at: datetime

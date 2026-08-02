@@ -10,8 +10,7 @@ class TimeBlockCreate(BaseModel):
     start_at: AwareDatetime
     end_at: AwareDatetime
     task_id: uuid.UUID | None = None
-    category_label: str | None = None
-    category_color: str | None = None
+    category_id: uuid.UUID | None = None
 
     @model_validator(mode="after")
     def end_after_start(self):
@@ -27,8 +26,7 @@ class TimeBlockUpdate(BaseModel):
     start_at: AwareDatetime | None = None
     end_at: AwareDatetime | None = None
     task_id: uuid.UUID | None = None
-    category_label: str | None = None
-    category_color: str | None = None
+    category_id: uuid.UUID | None = None
 
 class TimeBlockRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -37,8 +35,7 @@ class TimeBlockRead(BaseModel):
     task_id: uuid.UUID | None
     title: str
     description: str | None = None
-    category_label: str | None
-    category_color: str | None
+    category_id: uuid.UUID | None
     start_at: datetime
     end_at: datetime
     created_at: datetime

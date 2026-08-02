@@ -18,9 +18,7 @@ class TimeBlock(Base):
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
 
-    # users can choose the category names and colours to their liking
-    category_label: Mapped[str | None] = mapped_column(Text)
-    category_color: Mapped[str | None] = mapped_column(Text)
+    category_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"))
 
     # UTC instants.
     # The logical day and time is converted to this at query time
