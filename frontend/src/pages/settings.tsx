@@ -61,6 +61,51 @@ function initials(profile: UserProfile): string {
   return profile.display_name.slice(0, 2).toUpperCase()
 }
 
+// Shared by ThemeToggle and TimeFormatToggle: a sliding pill behind the selected
+// option, rather than each button just recoloring itself in place
+function SegmentedToggle<T extends string>({
+  ariaLabel,
+  options,
+  value,
+  onChange,
+  capitalizeLabels,
+}: {
+  ariaLabel: string
+  options: readonly [T, T]
+  value: T
+  onChange: (option: T) => void
+  capitalizeLabels?: boolean
+}) {
+  const selectedIndex = value === options[1] ? 1 : 0
+
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className="relative isolate grid grid-cols-2 rounded-[7px] border border-line p-0.5"
+    >
+      <div
+        aria-hidden
+        className={`absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/2)] rounded-[5px] bg-foreground transition-transform duration-200 ease-out ${
+          selectedIndex === 1 ? "translate-x-full" : "translate-x-0"
+        }`}
+      />
+      {options.map((option) => (
+        <button
+          key={option}
+          onClick={() => onChange(option)}
+          aria-pressed={value === option}
+          className={`relative z-10 cursor-pointer rounded-[5px] px-2.5 py-1 text-[11.5px] font-medium transition-colors duration-200 ${
+            capitalizeLabels ? "capitalize" : ""
+          } ${value === option ? "text-background" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // Binary and low-stakes, so it rides along in the identity card's footer strip rather
 // than taking a heading and a card of its own
 function ThemeToggle({ save }: { save: (changes: SettingsPatch) => void }) {
@@ -74,26 +119,13 @@ function ThemeToggle({ save }: { save: (changes: SettingsPatch) => void }) {
   }
 
   return (
-    <div
-      role="group"
-      aria-label="Theme"
-      className="inline-flex gap-0.5 rounded-[7px] border border-line p-0.5"
-    >
-      {(["light", "dark"] as const).map((option) => (
-        <button
-          key={option}
-          onClick={() => choose(option)}
-          aria-pressed={theme === option}
-          className={`cursor-pointer rounded-[5px] px-2.5 py-1 text-[11.5px] font-medium capitalize transition-colors ${
-            theme === option
-              ? "bg-foreground text-background"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {option}
-        </button>
-      ))}
-    </div>
+    <SegmentedToggle
+      ariaLabel="Theme"
+      options={["light", "dark"] as const}
+      value={theme}
+      onChange={choose}
+      capitalizeLabels
+    />
   )
 }
 
@@ -107,29 +139,15 @@ function TimeFormatToggle({
   save: (changes: SettingsPatch) => void
 }) {
   return (
-    <div
-      role="group"
-      aria-label="Time format"
-      className="inline-flex gap-0.5 rounded-[7px] border border-line p-0.5"
-    >
-      {(["12h", "24h"] as const).map((option) => (
-        <button
-          key={option}
-          onClick={() => {
-            if (option === value) return
-            save({ time_format: option })
-          }}
-          aria-pressed={value === option}
-          className={`cursor-pointer rounded-[5px] px-2.5 py-1 text-[11.5px] font-medium transition-colors ${
-            value === option
-              ? "bg-foreground text-background"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {option}
-        </button>
-      ))}
-    </div>
+    <SegmentedToggle
+      ariaLabel="Time format"
+      options={["12h", "24h"] as const}
+      value={value}
+      onChange={(option) => {
+        if (option === value) return
+        save({ time_format: option })
+      }}
+    />
   )
 }
 
