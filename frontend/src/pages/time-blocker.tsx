@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react"
 import { Pencil, Plus } from "lucide-react"
-import { TimeBlockDialog, type TimeBlockDraft } from "@/components/time-block-dialog"
+import { TimeBlockDialog } from "@/components/time-block-dialog"
 import { useMe } from "@/hooks/use-settings"
+import {
+  useCreateTimeBlock,
+  useDayBounds,
+  useDeleteTimeBlock,
+  useTimeBlocks,
+  useUpdateTimeBlock,
+} from "@/hooks/use-time-blocks"
 import { DayNav } from "@/components/time-blocker/day-nav"
 import { Button } from "@/components/ui/button"
 import {
   BUFFER_MINUTES,
-  DAY_END,
-  DAY_START,
   buildAgenda,
   dayCursor,
   fitToGap,
@@ -17,60 +22,10 @@ import {
   minutesOfDay,
   type BlockState,
   type TimeBlock,
+  type TimeBlockDraft,
 } from "@/lib/time-blocks"
 import { cn } from "@/lib/utils"
 
-const clock = (hours: number, minutes = 0) => hours * 60 + minutes
-
-// TODO(api): useTimeBlocks(date) — GET /time-blocks?date=YYYY-MM-DD
-const seedBlocks: TimeBlock[] = [
-  {
-    id: "seed-1",
-    title: "Morning setup & inbox triage",
-    details: "Clear overnight email, flag what actually needs a reply",
-    start: clock(8, 30),
-    end: clock(9, 15),
-  },
-  {
-    id: "seed-2",
-    title: "Deep work — Q3 roadmap draft",
-    details: "First full pass. No meetings, phone in the drawer.",
-    start: clock(9, 30),
-    end: clock(11),
-  },
-  { id: "seed-3", title: "Break — walk", details: null, start: clock(11, 15), end: clock(11, 45) },
-  {
-    id: "seed-4",
-    title: "Lunch, away from desk",
-    details: null,
-    start: clock(12, 30),
-    end: clock(13, 15),
-  },
-  {
-    id: "seed-5",
-    title: "Deep work — PR reviews",
-    details: "Two still pending on the sync service",
-    start: clock(14),
-    end: clock(15, 30),
-  },
-  {
-    id: "seed-6",
-    title: "1:1 with Maya",
-    details: "Career check-in — she's bringing the hiring plan",
-    start: clock(16),
-    end: clock(16, 45),
-  },
-  { id: "seed-7", title: "Gym", details: null, start: clock(19), end: clock(20) },
-  {
-    id: "seed-8",
-    title: "Wrap up & daily log",
-    details: "Tomorrow's first block decided before bed",
-    start: clock(20, 30),
-    end: clock(21),
-  },
-]
-
-// The line has to move on its own, or it goes quietly stale on a page left open
 function useNowMinutes() {
   const [now, setNow] = useState(() => minutesOfDay(new Date()))
   useEffect(() => {
@@ -90,11 +45,13 @@ function BlockCard({
   block,
   state,
   nowPct,
+  use24h,
   onEdit,
 }: {
   block: TimeBlock
   state: BlockState
   nowPct: number
+  use24h: boolean
   onEdit: () => void
 }) {
   return (
@@ -104,7 +61,6 @@ function BlockCard({
         stateClasses[state]
       )}
     >
-      {/* Sits where we are inside this block, so the line crosses it in proportion */}
       {state === "now" && (
         <div
           className="pointer-events-none absolute -inset-x-2 z-10 flex -translate-y-1/2 items-center"
@@ -118,10 +74,10 @@ function BlockCard({
 
       <div className="flex w-[68px] flex-none flex-col justify-between py-0.5">
         <span className="font-mono text-[13px] whitespace-nowrap text-ink">
-          {formatTime(block.start)}
+          {formatTime(block.start, use24h)}
         </span>
         <span className="font-mono text-[12px] whitespace-nowrap text-ink-3">
-          {formatTime(block.end)}
+          {formatTime(block.end, use24h)}
         </span>
       </div>
 
@@ -142,7 +98,6 @@ function BlockCard({
       </div>
 
       <div className="flex flex-none flex-col items-end justify-between gap-1.5 py-0.5">
-        {/* Quiet until you're on the card, but never hidden from the keyboard */}
         <Button
           variant="ghost"
           size="icon-xs"
@@ -160,12 +115,21 @@ function BlockCard({
   )
 }
 
-// Quiet at rest — it's an invitation, not a row in its own right
-function GapCard({ start, end, onClick }: { start: number; end: number; onClick: () => void }) {
+function GapCard({
+  start,
+  end,
+  use24h,
+  onClick,
+}: {
+  start: number
+  end: number
+  use24h: boolean
+  onClick: () => void
+}) {
   return (
     <button
       onClick={onClick}
-      aria-label={`Add a block between ${formatTime(start)} and ${formatTime(end)}`}
+      aria-label={`Add a block between ${formatTime(start, use24h)} and ${formatTime(end, use24h)}`}
       className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-linesoft px-3 py-2 text-ink-3 transition-colors hover:border-line hover:bg-linesoft hover:text-ink-2"
     >
       <Plus className="size-3" strokeWidth={2} />
@@ -175,7 +139,6 @@ function GapCard({ start, end, onClick }: { start: number; end: number; onClick:
   )
 }
 
-// Time already spent can't be booked, so it's just a measurement now
 function PastGap({ minutes }: { minutes: number }) {
   return (
     <div className="py-0.5 text-center font-mono text-[11px] text-ink-3">
@@ -184,12 +147,11 @@ function PastGap({ minutes }: { minutes: number }) {
   )
 }
 
-// The current time when no block is in progress to carry the line itself
-function NowLine({ minutes }: { minutes: number }) {
+function NowLine({ minutes, use24h }: { minutes: number; use24h: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
       <span className="font-mono text-[12px] font-semibold text-primary">
-        {formatTime(minutes)}
+        {formatTime(minutes, use24h)}
       </span>
       <span className="size-2 flex-none rounded-full bg-primary" />
       <div className="h-0.5 flex-1 rounded-full bg-primary" />
@@ -221,36 +183,38 @@ export function TimeBlockerPage() {
   const { data: me } = useMe()
   const use24h = me?.settings.time_format === "24h"
   const [date, setDate] = useState(() => new Date())
-  const [blocks, setBlocks] = useState<TimeBlock[]>(seedBlocks)
-  // undefined = closed, a range alone = creating, a block = editing that one
+  const { dayStart, dayEnd } = useDayBounds()
+
+  const { data: blocks = [], isPending } = useTimeBlocks(date)
+  const createBlock = useCreateTimeBlock(date)
+  const updateBlock = useUpdateTimeBlock(date)
+  const deleteBlock = useDeleteTimeBlock(date)
+
   const [editing, setEditing] = useState<Editing | undefined>(undefined)
   const nowMinutes = useNowMinutes()
 
-  const { items, freeMinutes } = buildAgenda(blocks, dayCursor(date, nowMinutes))
+  const { items, freeMinutes } = buildAgenda(blocks, dayCursor(date, nowMinutes), dayStart, dayEnd)
 
-  // Where "New block" starts you off. Clicking a gap means "fill this gap" and
-  // takes the whole fitted span; a generic add just wants somewhere free to
-  // land, so it takes an hour off the front of it.
   const openingRange = () => {
     const gaps = items.filter((item) => item.kind === "gap")
     const target = gaps.find((gap) => !gap.isPast) ?? gaps[0]
-    if (!target) return { start: DAY_START, end: DAY_START + 60 }
+    if (!target) return { start: dayStart, end: dayStart + 60 }
     const fitted = fitToGap(target.start, target.end)
     return { start: fitted.start, end: Math.min(fitted.end, fitted.start + 60) }
   }
 
-  const save = (draft: TimeBlockDraft) => {
+  const save = async (draft: TimeBlockDraft) => {
     const target = editing?.block
-    // TODO(api): useCreateTimeBlock / useUpdateTimeBlock
-    setBlocks((prev) =>
-      target
-        ? prev.map((b) => (b.id === target.id ? { ...b, ...draft } : b))
-        : [...prev, { id: crypto.randomUUID(), ...draft }]
-    )
+    if (target) {
+      await updateBlock.mutateAsync({ id: target.id, ...draft })
+    } else {
+      await createBlock.mutateAsync(draft)
+    }
   }
 
-  // TODO(api): useDeleteTimeBlock
-  const remove = (id: string) => setBlocks((prev) => prev.filter((b) => b.id !== id))
+  const remove = async (id: string) => {
+    await deleteBlock.mutateAsync(id)
+  }
 
   const summary = `${blocks.length} ${blocks.length === 1 ? "block" : "blocks"} · ${formatDuration(freeMinutes)} free`
 
@@ -263,9 +227,11 @@ export function TimeBlockerPage() {
         onAddBlock={() => setEditing({ range: openingRange() })}
       />
 
-      <DayEdge label={formatTime(DAY_START)} caption="day starts" className="mt-6 mb-3.5" />
+      <DayEdge label={formatTime(dayStart, use24h)} caption="day starts" className="mt-6 mb-3.5" />
 
-      {blocks.length === 0 ? (
+      {isPending ? (
+        <div className="py-10 text-center text-[13px] text-ink-3">Loading…</div>
+      ) : blocks.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-4.5 py-10 shadow-[var(--shadow)]">
           <p className="text-[13px] text-ink-3">Nothing blocked out for this day.</p>
           <Button variant="outline" size="sm" onClick={() => setEditing({ range: openingRange() })}>
@@ -285,18 +251,21 @@ export function TimeBlockerPage() {
                   key={item.key}
                   start={item.start}
                   end={item.end}
-                  // Fitted to the space, so the dialog opens with times that already work
+                  use24h={use24h}
                   onClick={() => setEditing({ range: fitToGap(item.start, item.end) })}
                 />
               )
             }
-            if (item.kind === "now-line") return <NowLine key={item.key} minutes={item.at} />
+            if (item.kind === "now-line") {
+              return <NowLine key={item.key} minutes={item.at} use24h={use24h} />
+            }
             return (
               <BlockCard
                 key={item.key}
                 block={item.block}
                 state={item.state}
                 nowPct={item.nowPct}
+                use24h={use24h}
                 onEdit={() =>
                   setEditing({
                     block: item.block,
@@ -309,9 +278,8 @@ export function TimeBlockerPage() {
         </div>
       )}
 
-      <DayEdge label={formatTime(DAY_END)} caption="day ends" className="mt-3.5" />
+      <DayEdge label={formatTime(dayEnd, use24h)} caption="day ends" className="mt-3.5" />
 
-      {/* Nothing left to click on a day that's already been */}
       {items.some((item) => item.kind === "gap" && !item.isPast) && (
         <p className="mt-4.5 text-center text-[12px] text-ink-3">
           Gaps are fitted with {BUFFER_MINUTES} min buffers on each side.
@@ -322,9 +290,11 @@ export function TimeBlockerPage() {
         open={editing !== undefined}
         onOpenChange={(open) => !open && setEditing(undefined)}
         block={editing?.block}
-        range={editing?.range ?? { start: DAY_START, end: DAY_START + 60 }}
+        range={editing?.range ?? { start: dayStart, end: dayStart + 60 }}
         blocks={blocks}
         use24h={use24h}
+        dayStart={dayStart}
+        dayEnd={dayEnd}
         onSave={save}
         onDelete={remove}
       />

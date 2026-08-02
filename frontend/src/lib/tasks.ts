@@ -15,6 +15,7 @@ export interface Task {
   energy_tag: EnergyTag | null
   estimate_minutes: number
   actual_minutes: number | null
+  category_id: string | null
   status: TaskStatus
   micro_steps: MicroStep[]
   created_at: string
@@ -50,6 +51,10 @@ export function deleteTask(id: string): Promise<void> {
 
 export function fetchTodayTasks(): Promise<Task[]> {
   return get<Task[]>("/tasks?view=today")
+}
+
+export function fetchIncompleteTasks(): Promise<Task[]> {
+  return get<Task[]>("/tasks?view=incomplete")
 }
 
 export function completeTask(id: string): Promise<Task> {

@@ -4,6 +4,7 @@ import {
   completeTask,
   createTask,
   deleteTask,
+  fetchIncompleteTasks,
   fetchTodayTasks,
   uncompleteTask,
   updateMicroSteps,
@@ -13,6 +14,7 @@ import {
 } from "@/lib/tasks"
 
 export const todayTasksKey = ["tasks", "today"] as const
+export const incompleteTasksKey = ["tasks", "incomplete"] as const
 
 // The backend applies no ORDER BY, so sort the list here
 // still-open tasks on top, newest first, with anything finished today sinking below them
@@ -30,6 +32,13 @@ export function useTodayTasks() {
     queryKey: todayTasksKey,
     queryFn: fetchTodayTasks,
     select: byOpenThenNewest,
+  })
+}
+
+export function useIncompleteTasks() {
+  return useQuery({
+    queryKey: incompleteTasksKey,
+    queryFn: fetchIncompleteTasks,
   })
 }
 

@@ -1,33 +1,75 @@
-// TODO(api): derive from useMe().day_start / day_end
+import { del, get, patch, post } from "@/lib/api"
+
+export interface TimeBlockRow {
+  id: string
+  task_id: string | null
+  title: string
+  description: string | null
+  category_id: string | null
+  start_at: string
+  end_at: string
+  created_at: string
+}
+
+interface TimeBlockPayload {
+  title: string
+  description?: string | null
+  start_at: string
+  end_at: string
+  task_id?: string | null
+  category_id?: string | null
+}
+
+export function fetchTimeBlocks(date: string): Promise<TimeBlockRow[]> {
+  return get<TimeBlockRow[]>(`/time-blocks?date=${date}`)
+}
+
+export function createTimeBlock(payload: TimeBlockPayload): Promise<TimeBlockRow> {
+  return post<TimeBlockRow>("/time-blocks", payload)
+}
+
+export function updateTimeBlock(
+  id: string,
+  payload: Partial<TimeBlockPayload>,
+): Promise<TimeBlockRow> {
+  return patch<TimeBlockRow>(`/time-blocks/${id}`, payload)
+}
+
+export function deleteTimeBlock(id: string): Promise<void> {
+  return del(`/time-blocks/${id}`)
+}
+
 export const DAY_START = 8 * 60 // 08:00
 export const DAY_END = 23 * 60 // 23:00
-
-// Breathing room left on each side of a block created from a gap.
-// TODO(api): becomes a user setting
 export const BUFFER_MINUTES = 10
-
-// Shorter than this and a gap isn't worth offering, or a block worth making
 export const MIN_GAP_MINUTES = 15
 export const MIN_BLOCK_MINUTES = 15
 
 export type TimeBlock = {
   id: string
   title: string
-  // No column for this on the backend yet — TimeBlockRead has title,
-  // start_at, end_at, task_id, category_label and category_color. Wiring this
-  // up needs either a new description column or a decision to reuse
-  // category_label.
   details: string | null
-  // Minutes from midnight. Integers keep every layout sum exact; converting to
-  // and from the backend's timezone-aware start_at/end_at stays one boundary.
+  task_id: string | null
+  category_id: string | null
   start: number
   end: number
 }
 
-export function formatTime(minutes: number) {
+export type TimeBlockDraft = {
+  title: string
+  details: string | null
+  task_id: string | null
+  category_id: string | null
+  start: number
+  end: number
+}
+
+export function formatTime(minutes: number, use24h = false) {
   const hours24 = Math.floor(minutes / 60)
+  const mins = String(minutes % 60).padStart(2, "0")
+  if (use24h) return `${String(hours24).padStart(2, "0")}:${mins}`
   const hours = ((hours24 + 11) % 12) + 1
-  return `${hours}:${String(minutes % 60).padStart(2, "0")} ${hours24 < 12 ? "AM" : "PM"}`
+  return `${hours}:${mins} ${hours24 < 12 ? "AM" : "PM"}`
 }
 
 export function formatDuration(minutes: number) {
@@ -71,6 +113,55 @@ export function addDays(date: Date, days: number) {
 
 export function isSameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString()
+}
+
+export function parseSettingsTime(hms: string): number {
+  const [h, m] = hms.split(":").map(Number)
+  return h * 60 + m
+}
+
+export function formatDateParam(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+function getMinutesInTz(date: Date, tz: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).formatToParts(date)
+  const hour = Number(parts.find((p) => p.type === "hour")!.value)
+  const minute = Number(parts.find((p) => p.type === "minute")!.value)
+  return (hour === 24 ? 0 : hour) * 60 + minute
+}
+
+export function toTimeBlock(row: TimeBlockRow, tz: string): TimeBlock {
+  return {
+    id: row.id,
+    title: row.title,
+    details: row.description,
+    task_id: row.task_id,
+    category_id: row.category_id,
+    start: getMinutesInTz(new Date(row.start_at), tz),
+    end: getMinutesInTz(new Date(row.end_at), tz),
+  }
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0")
+}
+
+export function minutesToUtcIso(dateStr: string, minutes: number, tz: string): string {
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  const asUtc = new Date(`${dateStr}T${pad2(h)}:${pad2(m)}:00Z`)
+  const inTz = getMinutesInTz(asUtc, tz)
+  const offsetMin = inTz - (h * 60 + m)
+  return new Date(asUtc.getTime() - offsetMin * 60_000).toISOString()
 }
 
 // Two blocks clash when each starts before the other ends
@@ -131,13 +222,18 @@ function elapsedThrough(cursor: DayCursor) {
 
 // The whole page in one pass: blocks in order, the free time between them, and
 // where the current time falls.
-export function buildAgenda(blocks: TimeBlock[], cursor: DayCursor) {
+export function buildAgenda(
+  blocks: TimeBlock[],
+  cursor: DayCursor,
+  dayStart = DAY_START,
+  dayEnd = DAY_END,
+) {
   const elapsed = elapsedThrough(cursor)
   const nowLine = cursor.kind === "today" ? cursor.now : null
 
   const sorted = [...blocks].sort((a, b) => a.start - b.start || a.end - b.end)
   const items: AgendaItem[] = []
-  let at = DAY_START
+  let at = dayStart
   let freeMinutes = 0
   let nowPlaced = false
 
@@ -178,12 +274,12 @@ export function buildAgenda(blocks: TimeBlock[], cursor: DayCursor) {
     // max() so overlapping blocks can't open a negative gap behind them
     at = Math.max(at, block.end)
   }
-  pushGap(at, DAY_END)
+  pushGap(at, dayEnd)
 
   // Nothing has carried the line yet: it falls on a seam between two blocks, or
   // in a sliver too short to have been shown
   const inBlock = items.some((item) => item.kind === "block" && item.state === "now")
-  if (nowLine !== null && nowLine >= DAY_START && nowLine <= DAY_END && !nowPlaced && !inBlock) {
+  if (nowLine !== null && nowLine >= dayStart && nowLine <= dayEnd && !nowPlaced && !inBlock) {
     const next = items.findIndex((item) => itemEnd(item) > nowLine)
     items.splice(next === -1 ? items.length : next, 0, {
       kind: "now-line",
