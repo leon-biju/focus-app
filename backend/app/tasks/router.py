@@ -1,12 +1,12 @@
 from typing import List
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db, get_day_context, DayContext
 from app.auth.models import User
-from app.tasks.schemas import TaskCreate, TaskRead, TaskUpdate
+from app.tasks.schemas import TaskCreate, TaskRead, TaskUpdate, TaskView
 import app.tasks.services as task_services
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -23,25 +23,14 @@ async def create_task(
 
 @router.get("")
 async def list_tasks(
-    session: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user)
-
-) -> List[TaskRead]:
-    
-    # temporary function just to get all tasks 
-    # In future get query paramters in here as well!
-    tasks = await task_services.get_user_tasks(session, user.id)
-    
-    return tasks
-
-
-@router.get("/today")
-async def todays_tasks(
+    view: TaskView = Query(),
     session: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
-    day: DayContext = Depends(get_day_context)
+    day: DayContext = Depends(get_day_context),
 ) -> List[TaskRead]:
-    tasks = await task_services.get_today_tasks(session, user.id, day)
+    tasks = await task_services.list_tasks(
+        session, user.id, view, day if view == TaskView.today else None,
+    )
     return tasks
 
 

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import StaleDataError
 
 from app.core.deps import DayContext
-from app.tasks.schemas import TaskCreate, TaskUpdate
+from app.tasks.schemas import TaskCreate, TaskUpdate, TaskView
 from app.tasks.models import Task, TaskStatus
 from app.tasks.exceptions import TaskNotFoundError, TaskConflictError
 
@@ -129,38 +129,30 @@ async def delete(
 
 
 
-# Every task, unordered and unfiltered. Filtering will move here as query params
-# once something other than /tasks/today needs it.
-async def get_user_tasks(
-    session: AsyncSession,
-    user_id: uuid.UUID
-) -> List[Task]:
-    
-    result = await session.execute(
-        select(Task)
-        .where(Task.user_id == user_id)
-    )
-
-    return list(result.scalars().all())
-
-
-
-
-# All incomplete tasks, plus anything completed since the previous session started.
-async def get_today_tasks(
+async def list_tasks(
     session: AsyncSession,
     user_id: uuid.UUID,
-    day: DayContext,
+    view: TaskView,
+    day: DayContext | None = None,
 ) -> List[Task]:
-    result = await session.execute(
-        select(Task)
-        .where(
-            Task.user_id == user_id,
-            or_(
-                Task.status != TaskStatus.done,
-                Task.completed_at >= day.prev_start,
-            ),
-        )
-    )
+    query = select(Task).where(Task.user_id == user_id)
 
-    return list(result.scalars())
+    match view:
+        case TaskView.today:
+            assert day is not None
+            query = query.where(
+                or_(
+                    Task.status != TaskStatus.done,
+                    Task.completed_at >= day.prev_start,
+                ),
+            )
+        case TaskView.incomplete:
+            query = query.where(Task.status != TaskStatus.done)
+        case TaskView.in_progress:
+            query = query.where(Task.status == TaskStatus.in_progress)
+        case TaskView.done:
+            query = query.where(Task.status == TaskStatus.done)
+
+
+    result = await session.execute(query)
+    return list(result.scalars().all())

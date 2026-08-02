@@ -1,8 +1,16 @@
 import uuid
+from enum import StrEnum
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from app.tasks.models import TaskStatus, EnergyTag
+
+
+class TaskView(StrEnum):
+    today = "today"
+    incomplete = "incomplete"
+    in_progress = "in_progress"
+    done = "done"
 
 class MicroStep(BaseModel):
     text: str
