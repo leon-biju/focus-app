@@ -62,13 +62,6 @@ class UserSettingsUpdate(BaseModel):
             raise ValueError("Unknown IANA timezone")
         return v
 
-    @field_validator("day_start")
-    @classmethod
-    def day_start_after_dst_window(cls, v: time | None) -> time | None:
-        if v is not None and v < time(4, 0):
-            raise ValueError("day start must be 04:00 or later")
-        return v
-
     @model_validator(mode="after")
     def day_end_after_day_start(self):
         if self.day_start is not None and self.day_end is not None:

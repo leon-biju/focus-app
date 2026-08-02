@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import { TimeField } from "@/components/ui/time-field"
 import { useTheme } from "@/components/theme-provider"
 import { useLogout } from "@/hooks/use-auth"
 import { useMe, useUpdateDisplayName, useUpdateSettings } from "@/hooks/use-settings"
@@ -16,7 +17,6 @@ const FOCUS_MAX = 180
 const BREAK_MIN = 1
 const BREAK_MAX = 60
 
-const EARLIEST_DAY_START = "04:00"
 
 // Not every runtime has supportedValuesOf, and an empty list just means the picker
 // falls back to whatever is already saved rather than blowing up the page.
@@ -284,20 +284,7 @@ function PreferencesCard({
   const [endDraft, setEndDraft] = useState<string | null>(null)
   const start = draft ?? serverStart
   const end = endDraft ?? serverEnd
-  const invalidStart = start < EARLIEST_DAY_START
   const invalidEnd = end !== "" && start !== "" && end <= start
-
-  const commitStart = () => {
-    if (draft === null || invalidStart) return
-    setDraft(null)
-    if (start !== serverStart) save({ day_start: start })
-  }
-
-  const commitEnd = () => {
-    if (endDraft === null || invalidEnd) return
-    setEndDraft(null)
-    if (end !== serverEnd) save({ day_end: end })
-  }
 
   const zones = useMemo(
     () =>
@@ -368,49 +355,40 @@ function PreferencesCard({
 
         <div>
           <div className="mb-1.5 text-xs text-muted-foreground">Day starts</div>
-          <Input
-            type="time"
+          <TimeField
             value={start}
-            aria-invalid={invalidStart}
+            use24h={settings.time_format === "24h"}
             aria-label="Day start time"
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={commitStart}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") e.currentTarget.blur()
-              if (e.key === "Escape") setDraft(null)
+            onChange={(v) => {
+              setDraft(v)
+              if (v !== serverStart) save({ day_start: v })
             }}
-            className={fieldClass}
           />
         </div>
 
         <div>
           <div className="mb-1.5 text-xs text-muted-foreground">Day ends</div>
-          <Input
-            type="time"
+          <TimeField
             value={end}
+            use24h={settings.time_format === "24h"}
             aria-invalid={invalidEnd}
             aria-label="Day end time"
-            onChange={(e) => setEndDraft(e.target.value)}
-            onBlur={commitEnd}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") e.currentTarget.blur()
-              if (e.key === "Escape") setEndDraft(null)
+            onChange={(v) => {
+              setEndDraft(v)
+              if (v > start && v !== serverEnd) save({ day_end: v })
             }}
-            className={fieldClass}
           />
         </div>
       </div>
 
       <div
         className={`mt-2.5 text-[11.5px] ${
-          invalidStart || invalidEnd ? "text-destructive" : "text-muted-foreground"
+          invalidEnd ? "text-destructive" : "text-muted-foreground"
         }`}
       >
-        {invalidStart
-          ? "Day start must be 4:00 AM or later"
-          : invalidEnd
-            ? "Day end must be after day start"
-            : `Your day runs ${formatClock(start, settings.time_format)} → ${formatClock(end, settings.time_format)}, ${settings.timezone} time.`}
+        {invalidEnd
+          ? "Day end must be after day start"
+          : `Your day runs ${formatClock(start, settings.time_format)} → ${formatClock(end, settings.time_format)}, ${settings.timezone} time.`}
       </div>
 
       {settings.timezone !== systemTimezone && (

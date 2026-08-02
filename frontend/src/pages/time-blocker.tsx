@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Pencil, Plus } from "lucide-react"
 import { TimeBlockDialog, type TimeBlockDraft } from "@/components/time-block-dialog"
+import { useMe } from "@/hooks/use-settings"
 import { DayNav } from "@/components/time-blocker/day-nav"
 import { Button } from "@/components/ui/button"
 import {
@@ -217,6 +218,8 @@ function DayEdge({
 type Editing = { block?: TimeBlock; range: { start: number; end: number } }
 
 export function TimeBlockerPage() {
+  const { data: me } = useMe()
+  const use24h = me?.settings.time_format === "24h"
   const [date, setDate] = useState(() => new Date())
   const [blocks, setBlocks] = useState<TimeBlock[]>(seedBlocks)
   // undefined = closed, a range alone = creating, a block = editing that one
@@ -321,6 +324,7 @@ export function TimeBlockerPage() {
         block={editing?.block}
         range={editing?.range ?? { start: DAY_START, end: DAY_START + 60 }}
         blocks={blocks}
+        use24h={use24h}
         onSave={save}
         onDelete={remove}
       />

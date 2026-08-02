@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { TimeField } from "@/components/ui/time-field"
 import {
   DAY_END,
   DAY_START,
@@ -52,6 +53,7 @@ function TimeBlockForm({
   block,
   range,
   blocks,
+  use24h,
   onSave,
   onDelete,
   onDone,
@@ -59,6 +61,7 @@ function TimeBlockForm({
   block?: TimeBlock
   range: { start: number; end: number }
   blocks: TimeBlock[]
+  use24h: boolean
   onSave: (draft: TimeBlockDraft) => void
   onDelete: (id: string) => void
   onDone: () => void
@@ -121,24 +124,22 @@ function TimeBlockForm({
         <div className="grid grid-cols-2 gap-3.5">
           <div>
             <div className={labelClass}>Starts</div>
-            <Input
-              type="time"
+            <TimeField
               value={start}
+              use24h={use24h}
               aria-label="Start time"
               aria-invalid={problem !== null}
-              onChange={(e) => setStart(e.target.value)}
-              className={cn(fieldClass, "font-mono")}
+              onChange={setStart}
             />
           </div>
           <div>
             <div className={labelClass}>Ends</div>
-            <Input
-              type="time"
+            <TimeField
               value={end}
+              use24h={use24h}
               aria-label="End time"
               aria-invalid={problem !== null}
-              onChange={(e) => setEnd(e.target.value)}
-              className={cn(fieldClass, "font-mono")}
+              onChange={setEnd}
             />
           </div>
         </div>
@@ -197,6 +198,7 @@ export function TimeBlockDialog({
   block,
   range,
   blocks,
+  use24h = false,
   onSave,
   onDelete,
 }: {
@@ -205,6 +207,7 @@ export function TimeBlockDialog({
   block?: TimeBlock
   range: { start: number; end: number }
   blocks: TimeBlock[]
+  use24h?: boolean
   onSave: (draft: TimeBlockDraft) => void
   onDelete: (id: string) => void
 }) {
@@ -223,6 +226,7 @@ export function TimeBlockDialog({
           block={block}
           range={range}
           blocks={blocks}
+          use24h={use24h}
           onSave={onSave}
           onDelete={onDelete}
           onDone={() => onOpenChange(false)}
