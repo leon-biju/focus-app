@@ -16,8 +16,6 @@ const FOCUS_MAX = 180
 const BREAK_MIN = 1
 const BREAK_MAX = 60
 
-// The backend rejects anything earlier: DST transitions cluster in 00:00-03:59 local,
-// so a cutoff in there makes the read and write paths disagree on which day it is.
 const EARLIEST_DAY_START = "04:00"
 
 // Not every runtime has supportedValuesOf, and an empty list just means the picker
@@ -222,17 +220,25 @@ function PreferencesCard({
   settings: UserSettings
   save: (changes: SettingsPatch) => void
 }) {
-  // The server sends "HH:MM:SS" but <input type="time"> wants "HH:MM"
-  const serverStart = settings.day_start_time.slice(0, 5)
+  const serverStart = settings.day_start.slice(0, 5)
+  const serverEnd = settings.day_end.slice(0, 5)
   const [draft, setDraft] = useState<string | null>(null)
+  const [endDraft, setEndDraft] = useState<string | null>(null)
   const start = draft ?? serverStart
-  // Zero-padded HH:MM compares correctly as a string, and a cleared input ("") is caught too
+  const end = endDraft ?? serverEnd
   const invalidStart = start < EARLIEST_DAY_START
+  const invalidEnd = end !== "" && start !== "" && end <= start
 
   const commitStart = () => {
     if (draft === null || invalidStart) return
     setDraft(null)
-    if (start !== serverStart) save({ day_start_time: start })
+    if (start !== serverStart) save({ day_start: start })
+  }
+
+  const commitEnd = () => {
+    if (endDraft === null || invalidEnd) return
+    setEndDraft(null)
+    if (end !== serverEnd) save({ day_end: end })
   }
 
   const zones = useMemo(
@@ -280,10 +286,8 @@ function PreferencesCard({
         />
       </div>
 
-      {/* Timezone sits next to the cutoff on purpose: "reset at 4:00 AM" says nothing
-          until you can see which clock it's 4:00 AM on. */}
-      <div className="mt-4.5 grid grid-cols-2 gap-3.5 border-t border-linesoft pt-4.5">
-        <div>
+      <div className="mt-4.5 grid grid-cols-3 gap-3.5 border-t border-linesoft pt-4.5">
+        <div className="col-span-3">
           <div className="mb-1.5 text-xs text-muted-foreground">Timezone</div>
           <select
             value={settings.timezone}
@@ -300,12 +304,12 @@ function PreferencesCard({
         </div>
 
         <div>
-          <div className="mb-1.5 text-xs text-muted-foreground">Daily reset</div>
+          <div className="mb-1.5 text-xs text-muted-foreground">Day starts</div>
           <Input
             type="time"
             value={start}
             aria-invalid={invalidStart}
-            aria-label="Daily reset time"
+            aria-label="Day start time"
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commitStart}
             onKeyDown={(e) => {
@@ -315,16 +319,35 @@ function PreferencesCard({
             className={fieldClass}
           />
         </div>
+
+        <div>
+          <div className="mb-1.5 text-xs text-muted-foreground">Day ends</div>
+          <Input
+            type="time"
+            value={end}
+            aria-invalid={invalidEnd}
+            aria-label="Day end time"
+            onChange={(e) => setEndDraft(e.target.value)}
+            onBlur={commitEnd}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur()
+              if (e.key === "Escape") setEndDraft(null)
+            }}
+            className={fieldClass}
+          />
+        </div>
       </div>
 
       <div
         className={`mt-2.5 text-[11.5px] ${
-          invalidStart ? "text-destructive" : "text-muted-foreground"
+          invalidStart || invalidEnd ? "text-destructive" : "text-muted-foreground"
         }`}
       >
         {invalidStart
-          ? "Daily reset must be 4:00 AM or later. Sorry I cba to do the logic for daylight savings"
-          : `Your day runs ${formatClock(start)} → ${formatClock(start)} the next morning, on ${settings.timezone} time.`}
+          ? "Day start must be 4:00 AM or later"
+          : invalidEnd
+            ? "Day end must be after day start"
+            : `Your day runs ${formatClock(start)} → ${formatClock(end)}, ${settings.timezone} time.`}
       </div>
 
       {settings.timezone !== systemTimezone && (

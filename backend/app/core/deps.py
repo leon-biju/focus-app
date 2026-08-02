@@ -1,15 +1,16 @@
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time
+from datetime import date, datetime, time, timedelta
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 import jwt
 import uuid
+from zoneinfo import ZoneInfo
 
 from app.db import get_db
 from app.config import settings
-from app.core.time import day_window, logical_date
+from app.core.time import day_window
 from app.auth.models import User
 from app.users.services import get_settings
 
@@ -27,7 +28,7 @@ async def get_current_user(
         user_id = uuid.UUID(payload["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):
         raise auth_error
-    
+
     user = await session.get(User, user_id)
 
     if user is None:
@@ -38,18 +39,18 @@ async def get_current_user(
 
 @dataclass(frozen=True)
 class DayContext:
-    today: date        # the user's current logical date
-    start: datetime    # UTC instant the day began (inclusive)
-    end: datetime      # UTC instant the day ends (exclusive)
+    today: date
     tz: str
     day_start: time
+    day_end: time
 
-    def window_for(self, on: date | None) -> tuple[datetime, datetime]:
-        # For endpoints that take an optional ?date=. None means today, which is
-        # already computed, so only another day costs the conversion.
-        if on is None or on == self.today:
-            return self.start, self.end
-        return day_window(on, self.tz, self.day_start)
+    def window_for(self, on: date | None = None) -> tuple[datetime, datetime]:
+        return day_window(on or self.today, self.tz, self.day_start, self.day_end)
+
+    @property
+    def prev_start(self) -> datetime:
+        start, _ = day_window(self.today - timedelta(days=1), self.tz, self.day_start, self.day_end)
+        return start
 
 
 async def get_day_context(
@@ -57,13 +58,11 @@ async def get_day_context(
     session: AsyncSession = Depends(get_db)
 ) -> DayContext:
     user_settings = await get_settings(session, user.id)
-    today = logical_date(datetime.now(UTC), user_settings.timezone, user_settings.day_start_time)
-    start, end = day_window(today, user_settings.timezone, user_settings.day_start_time)
+    today = datetime.now(ZoneInfo(user_settings.timezone)).date()
 
     return DayContext(
         today=today,
-        start=start,
-        end=end,
         tz=user_settings.timezone,
-        day_start=user_settings.day_start_time,
+        day_start=user_settings.day_start,
+        day_end=user_settings.day_end,
     )

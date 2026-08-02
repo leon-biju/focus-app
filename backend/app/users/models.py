@@ -23,7 +23,8 @@ class UserSettings(Base):
     )
 
     timezone: Mapped[str] = mapped_column(String(64), default="UTC")
-    day_start_time: Mapped[time] = mapped_column(Time, default=time(4, 0))
+    day_start: Mapped[time] = mapped_column(Time, default=time(8, 0))
+    day_end: Mapped[time] = mapped_column(Time, default=time(23, 0))
 
     focus_minutes: Mapped[int] = mapped_column(default=40, server_default="40")
     break_minutes: Mapped[int] = mapped_column(default=5, server_default="5")

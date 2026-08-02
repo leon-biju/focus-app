@@ -2,7 +2,7 @@ from typing import List
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.exc import StaleDataError
 
@@ -146,7 +146,7 @@ async def get_user_tasks(
 
 
 
-# Used by the dashboard etc. just all incomplete tasks and tasks that have been completed today
+# All incomplete tasks, plus anything completed since the previous session started.
 async def get_today_tasks(
     session: AsyncSession,
     user_id: uuid.UUID,
@@ -155,14 +155,11 @@ async def get_today_tasks(
     result = await session.execute(
         select(Task)
         .where(
-            Task.user_id == user_id
-            , or_(
+            Task.user_id == user_id,
+            or_(
                 Task.status != TaskStatus.done,
-                and_(
-                    Task.completed_at >= day.start,
-                    Task.completed_at < day.end,
-                )
-            )
+                Task.completed_at >= day.prev_start,
+            ),
         )
     )
 

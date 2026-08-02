@@ -11,10 +11,11 @@ export interface UserProfile {
   created_at: string
 }
 
-// Mirrors backend's UserSettingsRead. day_start_time comes over as "HH:MM:SS"
+// Mirrors backend's UserSettingsRead. Times come over as "HH:MM:SS"
 export interface UserSettings {
   timezone: string
-  day_start_time: string
+  day_start: string
+  day_end: string
   focus_minutes: number
   break_minutes: number
   flexible_timers: boolean

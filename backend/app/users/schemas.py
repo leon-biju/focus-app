@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, time
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.core.time import valid_timezones
 from app.users.models import Theme
@@ -34,7 +34,8 @@ class UserSettingsRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     timezone: str
-    day_start_time: time
+    day_start: time
+    day_end: time
     focus_minutes: int
     break_minutes: int
     flexible_timers: bool
@@ -45,7 +46,8 @@ class UserSettingsRead(BaseModel):
 class UserSettingsUpdate(BaseModel):
     # All optional
     timezone: str | None = None
-    day_start_time: time | None = None
+    day_start: time | None = None
+    day_end: time | None = None
     focus_minutes: int | None = Field(default=None, ge=5, le=180)
     break_minutes: int | None = Field(default=None, ge=1, le=60)
     flexible_timers: bool | None = None
@@ -58,14 +60,19 @@ class UserSettingsUpdate(BaseModel):
             raise ValueError("Unknown IANA timezone")
         return v
 
-    @field_validator("day_start_time")
+    @field_validator("day_start")
     @classmethod
     def day_start_after_dst_window(cls, v: time | None) -> time | None:
-        # DST transitions cluster in 00:00-03:59 local; a cutoff there can make
-        # the write and read paths disagree on which day an instant belongs to.
         if v is not None and v < time(4, 0):
             raise ValueError("day start must be 04:00 or later")
         return v
+
+    @model_validator(mode="after")
+    def day_end_after_day_start(self):
+        if self.day_start is not None and self.day_end is not None:
+            if self.day_end <= self.day_start:
+                raise ValueError("day end must be after day start")
+        return self
 
 
 class UserMeRead(BaseModel):
