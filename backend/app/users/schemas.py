@@ -4,7 +4,7 @@ from datetime import datetime, time
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.core.time import valid_timezones
-from app.users.models import Theme
+from app.users.models import Theme, TimeFormat
 
 
 class UserProfileRead(BaseModel):
@@ -34,6 +34,7 @@ class UserSettingsRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     timezone: str
+    time_format: TimeFormat
     day_start: time
     day_end: time
     focus_minutes: int
@@ -46,6 +47,7 @@ class UserSettingsRead(BaseModel):
 class UserSettingsUpdate(BaseModel):
     # All optional
     timezone: str | None = None
+    time_format: TimeFormat | None = None
     day_start: time | None = None
     day_end: time | None = None
     focus_minutes: int | None = Field(default=None, ge=5, le=180)

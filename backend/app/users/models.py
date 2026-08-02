@@ -12,6 +12,9 @@ class Theme(StrEnum):
     light = "light"
     dark = "dark"
 
+class TimeFormat(StrEnum):
+    twelve_hour = "12h"
+    twenty_four_hour = "24h"
 
 class UserSettings(Base):
     __tablename__ = "user_settings"
@@ -23,6 +26,11 @@ class UserSettings(Base):
     )
 
     timezone: Mapped[str] = mapped_column(String(64), default="UTC")
+
+    time_format: Mapped[TimeFormat] = mapped_column(
+        Enum(TimeFormat, name="time_format_type"),
+        default=TimeFormat.twenty_four_hour, server_default='twenty_four_hour'
+    )
     day_start: Mapped[time] = mapped_column(Time, default=time(8, 0))
     day_end: Mapped[time] = mapped_column(Time, default=time(23, 0))
 

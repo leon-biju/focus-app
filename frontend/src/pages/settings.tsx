@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import { useTheme } from "@/components/theme-provider"
 import { useLogout } from "@/hooks/use-auth"
 import { useMe, useUpdateDisplayName, useUpdateSettings } from "@/hooks/use-settings"
-import type { SettingsPatch, Theme, UserProfile, UserSettings } from "@/lib/users"
+import type { SettingsPatch, Theme, TimeFormat, UserProfile, UserSettings } from "@/lib/users"
 
 // Matches the ge/le bounds on the backend's UserSettingsUpdate
 const FOCUS_MIN = 5
@@ -28,11 +28,15 @@ const cardClass = "rounded-xl border border-border bg-card px-5.5 py-5 shadow-[v
 const fieldClass =
   "h-auto w-full rounded-lg border border-line bg-transparent px-3 py-2.25 font-mono text-[13px] shadow-none"
 
-function formatClock(hhmm: string): string {
+function formatClock(hhmm: string, format: TimeFormat): string {
   const [hours, minutes] = hhmm.split(":").map(Number)
   const at = new Date()
   at.setHours(hours, minutes, 0, 0)
-  return at.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+  return at.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: format === "12h",
+  })
 }
 
 // How long they've been here reads warmer than the raw join date, and it's the only
@@ -82,6 +86,42 @@ function ThemeToggle({ save }: { save: (changes: SettingsPatch) => void }) {
           aria-pressed={theme === option}
           className={`cursor-pointer rounded-[5px] px-2.5 py-1 text-[11.5px] font-medium capitalize transition-colors ${
             theme === option
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// Segmented like ThemeToggle, but this one has no local context to paint first —
+// settings.time_format from the server is the only source of truth
+function TimeFormatToggle({
+  value,
+  save,
+}: {
+  value: TimeFormat
+  save: (changes: SettingsPatch) => void
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Time format"
+      className="inline-flex gap-0.5 rounded-[7px] border border-line p-0.5"
+    >
+      {(["12h", "24h"] as const).map((option) => (
+        <button
+          key={option}
+          onClick={() => {
+            if (option === value) return
+            save({ time_format: option })
+          }}
+          aria-pressed={value === option}
+          className={`cursor-pointer rounded-[5px] px-2.5 py-1 text-[11.5px] font-medium transition-colors ${
+            value === option
               ? "bg-foreground text-background"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -286,7 +326,12 @@ function PreferencesCard({
         />
       </div>
 
-      <div className="mt-4.5 grid grid-cols-3 gap-3.5 border-t border-linesoft pt-4.5">
+      <div className="mt-4.5 flex items-center justify-between border-t border-linesoft pt-4.5">
+        <div className="text-[13.5px] font-medium">Time format</div>
+        <TimeFormatToggle value={settings.time_format} save={save} />
+      </div>
+
+      <div className="mt-3.5 grid grid-cols-3 gap-3.5">
         <div className="col-span-3">
           <div className="mb-1.5 text-xs text-muted-foreground">Timezone</div>
           <select
@@ -347,7 +392,7 @@ function PreferencesCard({
           ? "Day start must be 4:00 AM or later"
           : invalidEnd
             ? "Day end must be after day start"
-            : `Your day runs ${formatClock(start)} → ${formatClock(end)}, ${settings.timezone} time.`}
+            : `Your day runs ${formatClock(start, settings.time_format)} → ${formatClock(end, settings.time_format)}, ${settings.timezone} time.`}
       </div>
 
       {settings.timezone !== systemTimezone && (

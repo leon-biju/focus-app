@@ -2,6 +2,8 @@ import { get, patch } from "@/lib/api"
 
 export type Theme = "light" | "dark"
 
+export type TimeFormat = "12h" | "24h"
+
 // Mirrors backend's UserProfileRead
 export interface UserProfile {
   id: string
@@ -14,6 +16,7 @@ export interface UserProfile {
 // Mirrors backend's UserSettingsRead. Times come over as "HH:MM:SS"
 export interface UserSettings {
   timezone: string
+  time_format: TimeFormat
   day_start: string
   day_end: string
   focus_minutes: number
