@@ -93,7 +93,7 @@ export function TasksPage() {
           {tasks && (
             <div className="rounded-xl border border-border bg-card shadow-[var(--shadow)]">
               {visible.map((t, i) => {
-                const expandable = t.micro_steps.length > 0
+                const expandable = t.micro_steps.length > 0 || !!t.description
                 const open = expandable && expanded.has(t.id)
                 const done = t.status === "done"
                 const stepsDone = t.micro_steps.filter((s) => s.done).length
@@ -186,31 +186,40 @@ export function TasksPage() {
 
                     {open && (
                       <div className="flex flex-col gap-2 py-0.5 pr-4.5 pb-3.5 pl-12.5">
-                        <div className="text-[11px] font-semibold tracking-[.06em] text-ink-3 uppercase">
-                          Micro-steps
-                        </div>
-                        {t.micro_steps.map((step, index) => (
-                          <button
-                            key={step.text}
-                            onClick={() =>
-                              toggleStep.mutate({
-                                task: t,
-                                micro_steps: toggleStepAt(t.micro_steps, index),
-                              })
-                            }
-                            className="flex cursor-pointer items-center gap-2.5 text-left text-[13px] text-muted-foreground"
-                          >
-                            <span
-                              className={cn(
-                                "size-3.5 flex-none rounded-[5px] border-[1.5px] transition-colors",
-                                step.done ? "border-primary bg-primary" : "border-line"
-                              )}
-                            />
-                            <span className={cn(step.done && "text-ink-3 line-through")}>
-                              {step.text}
-                            </span>
-                          </button>
-                        ))}
+                        {t.description && (
+                          <p className="whitespace-pre-wrap text-[13px] text-muted-foreground">
+                            {t.description}
+                          </p>
+                        )}
+                        {t.micro_steps.length > 0 && (
+                          <>
+                            <div className="text-[11px] font-semibold tracking-[.06em] text-ink-3 uppercase">
+                              Micro-steps
+                            </div>
+                            {t.micro_steps.map((step, index) => (
+                              <button
+                                key={step.text}
+                                onClick={() =>
+                                  toggleStep.mutate({
+                                    task: t,
+                                    micro_steps: toggleStepAt(t.micro_steps, index),
+                                  })
+                                }
+                                className="flex cursor-pointer items-center gap-2.5 text-left text-[13px] text-muted-foreground"
+                              >
+                                <span
+                                  className={cn(
+                                    "size-3.5 flex-none rounded-[5px] border-[1.5px] transition-colors",
+                                    step.done ? "border-primary bg-primary" : "border-line"
+                                  )}
+                                />
+                                <span className={cn(step.done && "text-ink-3 line-through")}>
+                                  {step.text}
+                                </span>
+                              </button>
+                            ))}
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
