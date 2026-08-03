@@ -70,7 +70,7 @@ function NoteCard({ note, onPromoted }: { note: Note; onPromoted?: (task: Task) 
       ) : (
         <button
           onClick={() => setDraft(note.content)}
-          className="block w-full cursor-text pr-14 text-left text-[13px] leading-snug"
+          className="block w-full cursor-text break-words whitespace-pre-wrap pr-14 text-left text-[13px] leading-snug"
         >
           {note.content}
         </button>
