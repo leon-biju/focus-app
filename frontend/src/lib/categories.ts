@@ -32,6 +32,10 @@ export function deleteCategory(id: string): Promise<void> {
   return del(`/categories/${id}`)
 }
 
+export function fetchCategoryItemCount(id: string): Promise<{ count: number }> {
+  return get<{ count: number }>(`/categories/${id}/items/count`)
+}
+
 export const CATEGORY_COLORS = [
   { name: "Red", value: "#ef4444" },
   { name: "Orange", value: "#f97316" },

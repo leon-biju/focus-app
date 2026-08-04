@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 import uuid
 
 from fastapi import APIRouter, Depends, Query, status
@@ -9,6 +9,9 @@ from app.auth.models import User
 from app.categories.schemas import CategoryCreate, CategoryRead, CategoryUpdate
 from app.categories.models import CategoryType
 import app.categories.services as category_services
+
+from app.tasks.schemas import TaskRead
+from app.time_blocks.schemas import TimeBlockRead
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -61,3 +64,23 @@ async def delete_category(
     user: User = Depends(get_current_user),
 ):
     await category_services.delete(session, category_id, user.id)
+
+
+@router.get("/{category_id}/items")
+async def list_category_items(
+    category_id: uuid.UUID,
+    session: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> List[TaskRead | TimeBlockRead]:
+    items = await category_services.list_items(session, category_id, user.id)
+    return items
+
+
+@router.get("/{category_id}/items/count")
+async def count_category_items(
+    category_id: uuid.UUID,
+    session: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Dict[str, int]:
+    count = await category_services.count_items(session, category_id, user.id)
+    return {"count": count}
