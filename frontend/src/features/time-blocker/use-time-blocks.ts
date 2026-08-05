@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { ApiError } from "@/lib/api"
-import { useMe } from "@/hooks/use-settings"
+import { useMe } from "@/features/settings/use-settings"
 import {
   DAY_END,
   DAY_START,
@@ -14,7 +14,7 @@ import {
   updateTimeBlock,
   type TimeBlockDraft,
   type TimeBlockRow,
-} from "@/lib/time-blocks"
+} from "@/features/time-blocker/api"
 
 export const timeBlocksKey = (date: string) => ["time-blocks", date] as const
 

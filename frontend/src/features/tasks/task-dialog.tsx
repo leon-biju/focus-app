@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react"
 import { Plus, Trash2, X } from "lucide-react"
-import { CategoryPicker } from "@/components/category-picker"
+import { CategoryPicker } from "@/shared/category-picker"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useCreateTask, useDeleteTask, useUpdateTask } from "@/hooks/use-tasks"
-import type { EnergyTag, MicroStep, Task } from "@/lib/tasks"
+import { useCreateTask, useDeleteTask, useUpdateTask } from "@/features/tasks/use-tasks"
+import type { EnergyTag, MicroStep, Task } from "@/features/tasks/api"
 import { cn } from "@/lib/utils"
 
 const fieldClass =

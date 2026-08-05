@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { fetchCurrentUser, login, logout, register, type Credentials } from "@/lib/auth"
+import { fetchCurrentUser, login, logout, register, type Credentials } from "@/features/auth/api"
 
 export const currentUserKey = ["auth", "user"] as const
 

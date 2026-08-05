@@ -1,5 +1,5 @@
 import { get, post, patch, del } from "@/lib/api"
-import type { Task } from "@/lib/tasks"
+import type { Task } from "@/features/tasks/api"
 
 // Same as backend's NoteRead
 export interface Note {

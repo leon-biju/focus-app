@@ -1,4 +1,4 @@
-import type { EnergyTag } from "@/lib/tasks"
+import type { EnergyTag } from "@/features/tasks/api"
 import { cn } from "@/lib/utils"
 
 const styles: Record<EnergyTag, { label: string; className: string }> = {

@@ -3,9 +3,9 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { AuthShell } from "@/components/auth-shell"
+import { AuthShell } from "@/features/auth/auth-shell"
 import { ApiError } from "@/lib/api"
-import { useLogin } from "@/hooks/use-auth"
+import { useLogin } from "@/features/auth/use-auth"
 
 export function LoginPage() {
   const navigate = useNavigate()

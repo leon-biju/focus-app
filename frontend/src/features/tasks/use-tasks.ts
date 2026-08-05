@@ -11,7 +11,7 @@ import {
   updateTask,
   type MicroStep,
   type Task,
-} from "@/lib/tasks"
+} from "@/features/tasks/api"
 
 export const todayTasksKey = ["tasks", "today"] as const
 export const incompleteTasksKey = ["tasks", "incomplete"] as const

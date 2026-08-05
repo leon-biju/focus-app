@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useTheme } from "@/components/theme-provider"
-import { fetchMe, updateDisplayName, updateSettings, type UserMe } from "@/lib/users"
+import { useTheme } from "@/layout/theme-provider"
+import { fetchMe, updateDisplayName, updateSettings, type UserMe } from "@/features/settings/api"
 
 export const userMeKey = ["users", "me"] as const
 

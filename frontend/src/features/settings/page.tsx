@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { TimeField } from "@/components/ui/time-field"
-import { useTheme } from "@/components/theme-provider"
-import { useLogout } from "@/hooks/use-auth"
-import { useMe, useUpdateDisplayName, useUpdateSettings } from "@/hooks/use-settings"
-import type { SettingsPatch, Theme, TimeFormat, UserProfile, UserSettings } from "@/lib/users"
+import { useTheme } from "@/layout/theme-provider"
+import { useLogout } from "@/features/auth/use-auth"
+import { useMe, useUpdateDisplayName, useUpdateSettings } from "@/features/settings/use-settings"
+import type { SettingsPatch, Theme, TimeFormat, UserProfile, UserSettings } from "@/features/settings/api"
 
 // Matches the ge/le bounds on the backend's UserSettingsUpdate
 const FOCUS_MIN = 5

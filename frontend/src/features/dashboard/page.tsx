@@ -1,9 +1,9 @@
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
-import { EnergyBadge } from "@/components/energy-badge"
-import { ProgressRing } from "@/components/progress-ring"
+import { EnergyBadge } from "@/features/dashboard/energy-badge"
+import { ProgressRing } from "@/features/dashboard/progress-ring"
 import { Button } from "@/components/ui/button"
-import { useNoteComposer } from "@/hooks/use-notes"
+import { useNoteComposer } from "@/features/notes/use-notes"
 
 const todaysThree = [
   { name: "Send the invoice to Meridian", done: true, energy: "low" as const, est: "~10m" },

@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
 import { Pencil, Plus } from "lucide-react"
-import { TimeBlockDialog } from "@/components/time-block-dialog"
-import { useCategories } from "@/hooks/use-categories"
-import { useMe } from "@/hooks/use-settings"
-import { useIncompleteTasks } from "@/hooks/use-tasks"
+import { TimeBlockDialog } from "@/features/time-blocker/time-block-dialog"
+import { useCategories } from "@/shared/use-categories"
+import { useMe } from "@/features/settings/use-settings"
+import { useIncompleteTasks } from "@/features/tasks/use-tasks"
 import {
   useCreateTimeBlock,
   useDayBounds,
   useDeleteTimeBlock,
   useTimeBlocks,
   useUpdateTimeBlock,
-} from "@/hooks/use-time-blocks"
-import { DayNav } from "@/components/time-blocker/day-nav"
+} from "@/features/time-blocker/use-time-blocks"
+import { DayNav } from "@/features/time-blocker/day-nav"
 import { Button } from "@/components/ui/button"
-import type { Category } from "@/lib/categories"
+import type { Category } from "@/shared/categories"
 import {
   BUFFER_MINUTES,
   buildAgenda,
@@ -26,7 +26,7 @@ import {
   type BlockState,
   type TimeBlock,
   type TimeBlockDraft,
-} from "@/lib/time-blocks"
+} from "@/features/time-blocker/api"
 import { cn } from "@/lib/utils"
 
 function useNowMinutes() {

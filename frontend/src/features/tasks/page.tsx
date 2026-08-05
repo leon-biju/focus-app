@@ -1,12 +1,12 @@
 import { useState, type KeyboardEvent } from "react"
 import { ChevronDown, ChevronUp, ListChecks, Pencil, Plus } from "lucide-react"
-import { EnergyBadge } from "@/components/energy-badge"
-import { NotesPanel } from "@/components/notes-panel"
-import { TaskDialog } from "@/components/task-dialog"
+import { EnergyBadge } from "@/features/dashboard/energy-badge"
+import { NotesPanel } from "@/features/notes/notes-panel"
+import { TaskDialog } from "@/features/tasks/task-dialog"
 import { Button } from "@/components/ui/button"
-import { useFlipList } from "@/hooks/use-flip-list"
-import { toggleStepAt, useTodayTasks, useToggleMicroStep, useToggleTaskDone } from "@/hooks/use-tasks"
-import type { Task } from "@/lib/tasks"
+import { useFlipList } from "@/features/tasks/use-flip-list"
+import { toggleStepAt, useTodayTasks, useToggleMicroStep, useToggleTaskDone } from "@/features/tasks/use-tasks"
+import type { Task } from "@/features/tasks/api"
 import { cn } from "@/lib/utils"
 
 const filters = [

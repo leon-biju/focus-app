@@ -8,9 +8,9 @@ import {
   useNotes,
   usePromoteNote,
   useUpdateNote,
-} from "@/hooks/use-notes"
-import type { Note } from "@/lib/notes"
-import type { Task } from "@/lib/tasks"
+} from "@/features/notes/use-notes"
+import type { Note } from "@/features/notes/api"
+import type { Task } from "@/features/tasks/api"
 
 function timeAgo(iso: string) {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000)

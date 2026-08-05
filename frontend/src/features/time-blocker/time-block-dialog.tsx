@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type FormEvent } from "react"
 import { Check, ChevronDown, Search, Trash2, X } from "lucide-react"
-import { CategoryPicker, triggerClass } from "@/components/category-picker"
+import { CategoryPicker, triggerClass } from "@/shared/category-picker"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
 import { TimeField } from "@/components/ui/time-field"
-import { useIncompleteTasks } from "@/hooks/use-tasks"
+import { useIncompleteTasks } from "@/features/tasks/use-tasks"
 import {
   findOverlap,
   formatTime,
@@ -23,7 +23,7 @@ import {
   toTimeInput,
   type TimeBlock,
   type TimeBlockDraft,
-} from "@/lib/time-blocks"
+} from "@/features/time-blocker/api"
 import { cn } from "@/lib/utils"
 
 const fieldClass =

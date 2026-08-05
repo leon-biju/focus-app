@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom"
-import { useCurrentUser } from "@/hooks/use-auth"
+import { useCurrentUser } from "@/features/auth/use-auth"
 
 export function RequireAuth() {
   const { data: user, isPending } = useCurrentUser()

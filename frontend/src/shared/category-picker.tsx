@@ -2,8 +2,8 @@ import { useState } from "react"
 import { Check, ChevronDown, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from "@/hooks/use-categories"
-import { CATEGORY_COLORS, fetchCategoryItemCount, type Category, type CategoryType } from "@/lib/categories"
+import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from "@/shared/use-categories"
+import { CATEGORY_COLORS, fetchCategoryItemCount, type Category, type CategoryType } from "@/shared/categories"
 import { cn } from "@/lib/utils"
 
 export const triggerClass =

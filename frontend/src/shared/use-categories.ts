@@ -6,7 +6,7 @@ import {
   updateCategory,
   type Category,
   type CategoryType,
-} from "@/lib/categories"
+} from "@/shared/categories"
 
 export const categoriesKey = (type: CategoryType) => ["categories", type] as const
 

@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { ProgressRing } from "@/components/progress-ring"
+import { ProgressRing } from "@/features/dashboard/progress-ring"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { useNoteComposer } from "@/hooks/use-notes"
-import type { Note } from "@/lib/notes"
+import { useNoteComposer } from "@/features/notes/use-notes"
+import type { Note } from "@/features/notes/api"
 
 export function FocusModePage() {
   // "This session" is scoped to this visit: only what got parked since the page

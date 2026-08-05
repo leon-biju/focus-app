@@ -10,8 +10,8 @@ import {
   LogOut,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useCurrentUser, useLogout } from "@/hooks/use-auth"
-import { useMe } from "@/hooks/use-settings"
+import { useCurrentUser, useLogout } from "@/features/auth/use-auth"
+import { useMe } from "@/features/settings/use-settings"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,

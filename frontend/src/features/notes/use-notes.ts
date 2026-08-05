@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { todayTasksKey } from "@/hooks/use-tasks"
+import { todayTasksKey } from "@/features/tasks/use-tasks"
 import { ApiError } from "@/lib/api"
 import {
   createNote,
@@ -9,8 +9,8 @@ import {
   promoteNote,
   updateNote,
   type Note,
-} from "@/lib/notes"
-import type { Task } from "@/lib/tasks"
+} from "@/features/notes/api"
+import type { Task } from "@/features/tasks/api"
 
 export const notesKey = ["notes"] as const
 
