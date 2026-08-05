@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react"
 import { Plus, Trash2, X } from "lucide-react"
+import { CategoryPicker } from "@/components/category-picker"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -40,10 +41,9 @@ function TaskForm({ task, onSaved }: { task?: Task; onSaved: () => void }) {
   const [titleTouched, setTitleTouched] = useState(false)
   const [minutes, setMinutes] = useState(task ? String(task.estimate_minutes) : DEFAULT_MINUTES)
   const [energy, setEnergy] = useState<EnergyTag | "">(task?.energy_tag ?? "")
+  const [categoryId, setCategoryId] = useState<string | null>(task?.category_id ?? null)
   const [description, setDescription] = useState(task?.description ?? "")
-  // Existing steps keep their objects so editing the wording doesn't untick them
   const [steps, setSteps] = useState<MicroStep[]>(task?.micro_steps ?? [])
-  // Deleting can't be undone and the button sits a click away from Save, so it asks twice
   const [armed, setArmed] = useState(false)
 
   const parsedMinutes = Number(minutes)
@@ -75,7 +75,7 @@ function TaskForm({ task, onSaved }: { task?: Task; onSaved: () => void }) {
       description: description.trim() || null,
       energy_tag: energy || null,
       estimate_minutes: parsedMinutes,
-      // Rows someone added and then left empty shouldn't become steps
+      category_id: categoryId,
       micro_steps: steps
         .filter((step) => step.text.trim() !== "")
         .map((step) => ({ ...step, text: step.text.trim() })),
@@ -126,23 +126,28 @@ function TaskForm({ task, onSaved }: { task?: Task; onSaved: () => void }) {
         </div>
 
         <div>
-          <div className={labelClass}>Energy</div>
-          <select
-            value={energy}
-            aria-label="Energy tag"
-            onChange={(e) => setEnergy(e.target.value as EnergyTag | "")}
-            className={cn(
-              fieldClass,
-              "cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            )}
-          >
-            {energyOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className={labelClass}>Category</div>
+          <CategoryPicker type="task" value={categoryId} onChange={setCategoryId} />
         </div>
+      </div>
+
+      <div>
+        <div className={labelClass}>Energy</div>
+        <select
+          value={energy}
+          aria-label="Energy tag"
+          onChange={(e) => setEnergy(e.target.value as EnergyTag | "")}
+          className={cn(
+            fieldClass,
+            "cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          )}
+        >
+          {energyOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>

@@ -34,6 +34,7 @@ export interface TaskDraft {
   description: string | null
   energy_tag: EnergyTag | null
   estimate_minutes: number
+  category_id: string | null
   micro_steps: MicroStep[]
 }
 
