@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Pencil, Plus } from "lucide-react"
 import { TimeBlockDialog } from "@/components/time-block-dialog"
+import { useCategories } from "@/hooks/use-categories"
 import { useMe } from "@/hooks/use-settings"
+import { useIncompleteTasks } from "@/hooks/use-tasks"
 import {
   useCreateTimeBlock,
   useDayBounds,
@@ -11,6 +13,7 @@ import {
 } from "@/hooks/use-time-blocks"
 import { DayNav } from "@/components/time-blocker/day-nav"
 import { Button } from "@/components/ui/button"
+import type { Category } from "@/lib/categories"
 import {
   BUFFER_MINUTES,
   buildAgenda,
@@ -47,20 +50,31 @@ function BlockCard({
   nowPct,
   use24h,
   onEdit,
+  category,
+  taskTitle,
 }: {
   block: TimeBlock
   state: BlockState
   nowPct: number
   use24h: boolean
   onEdit: () => void
+  category?: Category
+  taskTitle?: string
 }) {
   return (
     <div
       className={cn(
-        "group relative flex gap-4 rounded-xl border bg-card px-4 py-3.5 shadow-[var(--shadow)]",
+        "group relative flex gap-4 overflow-hidden rounded-xl border bg-card px-4 py-3.5 shadow-[var(--shadow)]",
         stateClasses[state]
       )}
     >
+      {category && (
+        <div
+          className="absolute inset-y-0 left-0 w-2.5 rounded-l-xl"
+          style={{ backgroundColor: category.color }}
+        />
+      )}
+
       {state === "now" && (
         <div
           className="pointer-events-none absolute -inset-x-2 z-10 flex -translate-y-1/2 items-center"
@@ -84,7 +98,7 @@ function BlockCard({
       <div className="w-px flex-none bg-line" />
 
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="min-w-0 truncate text-sm font-medium text-ink">{block.title}</span>
           {state === "now" && (
             <span className="flex-none rounded-full bg-primary px-1.5 py-[2px] text-[10px] font-semibold tracking-[.06em] text-primary-foreground uppercase">
@@ -92,21 +106,36 @@ function BlockCard({
             </span>
           )}
         </div>
+        {taskTitle && (
+          <span className="min-w-0 truncate rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-ink-2 italic w-fit">
+            {taskTitle}
+          </span>
+        )}
         {block.details && (
           <span className="text-[13px] leading-snug text-muted-foreground">{block.details}</span>
         )}
       </div>
 
       <div className="flex flex-none flex-col items-end justify-between gap-1.5 py-0.5">
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label={`Edit ${block.title}`}
-          onClick={onEdit}
-          className="text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:text-ink"
-        >
-          <Pencil />
-        </Button>
+        <div className="flex items-center gap-1.5">
+          {category && (
+            <span
+              className="rounded-full px-2 py-[1px] text-[11px] font-medium"
+              style={{ backgroundColor: `${category.color}18`, color: category.color }}
+            >
+              {category.label}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`Edit ${block.title}`}
+            onClick={onEdit}
+            className="text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:text-ink"
+          >
+            <Pencil />
+          </Button>
+        </div>
         <span className="font-mono text-[11px] whitespace-nowrap text-ink-3">
           {formatDuration(block.end - block.start)}
         </span>
@@ -190,6 +219,18 @@ export function TimeBlockerPage() {
   const updateBlock = useUpdateTimeBlock(date)
   const deleteBlock = useDeleteTimeBlock(date)
 
+  const { data: categories = [] } = useCategories("time_block")
+  const { data: tasks = [] } = useIncompleteTasks()
+
+  const categoryMap = useMemo(
+    () => new Map(categories.map((c) => [c.id, c])),
+    [categories],
+  )
+  const taskMap = useMemo(
+    () => new Map(tasks.map((t) => [t.id, t.title])),
+    [tasks],
+  )
+
   const [editing, setEditing] = useState<Editing | undefined>(undefined)
   const nowMinutes = useNowMinutes()
 
@@ -272,6 +313,8 @@ export function TimeBlockerPage() {
                     range: { start: item.block.start, end: item.block.end },
                   })
                 }
+                category={item.block.category_id ? categoryMap.get(item.block.category_id) : undefined}
+                taskTitle={item.block.task_id ? taskMap.get(item.block.task_id) : undefined}
               />
             )
           })}
